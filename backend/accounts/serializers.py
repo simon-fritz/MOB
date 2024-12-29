@@ -17,10 +17,10 @@ class RegisterSerializer(serializers.Serializer):
         secret = data['secret']
         if role == CustomUser.ROLE_TEACHER:
             if secret != os.getenv('TEACHER_SECRET'):
-                raise serializers.ValidationError("Falscher Secret Key für Lehrer.")
+                raise serializers.ValidationError("Wrong Secret Key for Teacher.")
         if role == CustomUser.ROLE_STUDENT:
             if secret != os.getenv('STUDENT_SECRET'):
-                raise serializers.ValidationError("Falscher Secret Key für Schüler.")
+                raise serializers.ValidationError("Wrong Secret Key for Student.")
         return data
 
 
