@@ -1,0 +1,33 @@
+# venvs
+env/
+.venv/
+
+# python cashes
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+*.pyo
+
+.DS_Store
+Thumbs.db
+*.swp
+
+# logs
+*.log
+
+#databases
+db.sqlite3
+
+#env
+.env
+
+#migrations
+*/migrations/
+
+#statics
+staticfiles/
+media/
+
+htmlcov/
+.coverage

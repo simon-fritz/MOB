@@ -25,6 +25,10 @@ function RoleSelection({ setRole }) {
     }
   };
 
+  const handleRoomCreation = () => {
+    
+  };
+
   return (
     <Container
       fluid
