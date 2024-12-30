@@ -1,76 +1,73 @@
-import React, { useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { Container, Row, Col, Card, Button, Form } from 'react-bootstrap';
+import React, { useState } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Container, Row, Col, Card, Button, Form } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import API from "./api";
 
 function RoleSelection({ setRole }) {
-  // Lokaler State für das Lehrer-Passwort und die Schüler-Raumnummer
-  const [teacherPassword, setTeacherPassword] = useState('');
-  const [roomNumber, setRoomNumber] = useState('');
+  const [roomNumber, setRoomNumber] = useState("");
+  const [roomName, setRoomName] = useState("");
+  const navigate = useNavigate();
 
-  // Lehrer-Button-Handler
-  const handleTeacherClick = () => {
-    if (teacherPassword === 'MOB2025') {
-      setRole('teacher');
-    } else {
-      alert('Falsches Passwort');
+  const handleCreateRoom = async () => {
+    if (roomName.trim().length === 0) {
+      alert("Bitte geben Sie einen Namen für den Raum ein.");
+      return;
+    }
+    try {
+      const response = await API.post("/api/rooms/", { name: roomName });
+      navigate("/room", { state: response.data });
+    } catch (error) {
+      console.error("Error creating room:", error);
+      alert("Failed to create room. Please try again.");
     }
   };
 
-  // Schüler-Button-Handler
-  const handleStudentClick = () => {
-    if (roomNumber.trim().length > 0) {
-      setRole('student');
-    } else {
-      alert('Bitte eine gültige Raumnummer eingeben.');
+  const handleJoinRoom = () => {
+    if (roomNumber.trim().length === 0) {
+      alert("Bitte geben Sie ein Kürzel für den Raum ein.");
+      return;
     }
-  };
-
-  const handleRoomCreation = () => {
-    
+    API.post("/api/rooms/join/", { code: roomNumber }).then((reponse) =>
+      console.log(reponse)
+    );
   };
 
   return (
     <Container
       fluid
       className="d-flex justify-content-center align-items-center"
-      style={{ minHeight: '100vh' }}
+      style={{ minHeight: "100vh" }}
     >
       <Row className="gx-5">
-        {/* Karte für Lehrer */}
         <Col xs={12} md={6} className="mb-3 mb-md-0">
           <Card className="text-center shadow">
             <Card.Body>
               <Card.Title>Lehrer</Card.Title>
-              <Card.Text>
-                Erstelle einen neuen Raum für deine Klasse.
-              </Card.Text>
+              <Card.Text>Erstelle einen neuen Raum für deine Klasse.</Card.Text>
 
-              {/* Eingabefeld für das Lehrer-Passwort */}
+              {/* Eingabefeld für den Raum-Namen */}
               <Form.Group className="mb-3">
-                <Form.Label>Passwort</Form.Label>
+                <Form.Label>Raumname</Form.Label>
                 <Form.Control
-                  type="password"
-                  placeholder="super secret password"
-                  value={teacherPassword}
-                  onChange={(e) => setTeacherPassword(e.target.value)}
+                  type="text"
+                  placeholder="Mein Klassenraum"
+                  value={roomName}
+                  onChange={(e) => setRoomName(e.target.value)}
                 />
               </Form.Group>
 
-              <Button variant="primary" onClick={handleTeacherClick}>
+              <Button variant="primary" onClick={handleCreateRoom}>
                 Raum erstellen
               </Button>
             </Card.Body>
           </Card>
         </Col>
-
-        {/* Karte für Schüler */}
         <Col xs={12} md={6}>
           <Card className="text-center shadow">
             <Card.Body>
               <Card.Title>Schüler</Card.Title>
-              <Card.Text>
-                Tritt einem bestehenden Raum bei.
-              </Card.Text>
+              <Card.Text>Tritt einem bestehenden Raum bei.</Card.Text>
 
               {/* Eingabefeld für die Raumnummer */}
               <Form.Group className="mb-3">
@@ -83,7 +80,7 @@ function RoleSelection({ setRole }) {
                 />
               </Form.Group>
 
-              <Button variant="success" onClick={handleStudentClick}>
+              <Button variant="success" onClick={handleJoinRoom}>
                 Raum beitreten
               </Button>
             </Card.Body>

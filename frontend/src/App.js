@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import RegisterPage from './components/RegisterPage';
+import LoginPage from './components/LoginPage';
 import RoleSelection from './components/RoleSelection';
-import TeacherPanel from './components/TeacherPanel';
-import Chat from './components/Chat';
+import RoomPage from './components/RoomPage';
 
 function App() {
-  const [role, setRole] = useState(null);
-  if (role === null) {
-    return <RoleSelection setRole={setRole} />;
-  } else if (role === 'teacher') {
-    return <TeacherPanel />;
-  } else {
-    return <Chat />;
-  }
+  return (
+    <Router>
+      <Routes>
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/role-selection" element={<RoleSelection />} />
+        <Route path="/room" element={<RoomPage />} />
+      </Routes>
+    </Router>
+  );
 }
 
 export default App;

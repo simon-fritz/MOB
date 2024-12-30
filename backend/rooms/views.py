@@ -165,3 +165,35 @@ class RoomMembershipViewSet(viewsets.ModelViewSet):
     )
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
+    
+    @swagger_auto_schema(
+        method='get',
+        operation_description="List all users in a given room (by room_id).",
+        responses={
+            200: openapi.Response(
+                description="OK",
+                schema=RoomMembershipSerializer(many=True)
+            ),
+            404: "Room not found"
+        },
+        security=[{'Bearer': []}] 
+    )
+    @action(
+        detail=True,
+        methods=['get'],
+        url_path='members',
+        permission_classes=[permissions.IsAuthenticatedOrReadOnly]
+    )
+    def get_room_members(self, request, pk=None):
+        """
+        GET /rooms/<room_id>/members/
+        Returns a list of memberships for this room (thus all users in the room).
+        """
+        try:
+            room = self.get_object()  # or Room.objects.get(pk=pk)
+        except Room.DoesNotExist:
+            return Response({"detail": "Room not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        memberships = RoomMembership.objects.filter(room=room)
+        serializer = RoomMembershipSerializer(memberships, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
