@@ -1,4 +1,3 @@
-// src/components/RoomPage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -6,7 +5,7 @@ import { Card, Container } from "react-bootstrap";
 import RoomMembers from "./RoomMembers";
 import axios from "axios";
 
-function RoomPage() {
+function StudentPanel() {
   const { roomId } = useParams();
   const [room, setRoom] = useState(null);
   const [error, setError] = useState("");
@@ -14,7 +13,6 @@ function RoomPage() {
   useEffect(() => {
     const fetchRoom = async () => {
       try {
-        console.log(roomId, room);
         const response = await axios.get(
           `http://localhost:8000/api/rooms/${roomId}/`
         );
@@ -40,6 +38,7 @@ function RoomPage() {
   return (
     <Container className="mt-5">
       <Card className="shadow p-4">
+        <Card.Header className="text-center">Student Panel</Card.Header>
         <Card.Body>
           <Card.Title className="text-center">Room Details</Card.Title>
           <Card.Text>
@@ -62,4 +61,4 @@ function RoomPage() {
   );
 }
 
-export default RoomPage;
+export default StudentPanel;

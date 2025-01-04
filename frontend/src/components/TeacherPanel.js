@@ -1,47 +1,62 @@
-import React, { useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import { Container, Row, Col, Card } from 'react-bootstrap';
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css";
+import { Card, Container } from "react-bootstrap";
+import RoomMembers from "./RoomMembers";
+import axios from "axios";
 
 function TeacherPanel() {
-  // Beispielhaft: Raumnummer und Liste verbundener Schüler im lokalen State
-  const [roomNumber] = useState('1234');
-  const [students] = useState([
-    { id: 1, name: 'Alice' },
-    { id: 2, name: 'Bob' },
-  ]);
+  const { roomId } = useParams();
+  const [room, setRoom] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchRoom = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:8000/api/rooms/${roomId}/`
+        );
+        setRoom(response.data);
+      } catch (err) {
+        setError("Raum nicht gefunden.");
+      }
+    };
+
+    if (roomId) {
+      fetchRoom();
+    }
+  }, [roomId]);
+
+  if (error) {
+    return <p>{error}</p>;
+  }
+
+  if (!room) {
+    return <p>Loading...</p>;
+  }
 
   return (
-    <Container>
-      <Row className="mt-4">
-        <Col>
-          {/* Karte mit der Raumnummer */}
-          <Card className="shadow-sm">
-            <Card.Body>
-              <Card.Title>Raum Nr. {roomNumber}</Card.Title>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      <Row className="mt-4">
-        <Col>
-          {/* Karte mit der Liste der verbundenen Schüler */}
-          <Card className="shadow-sm">
-            <Card.Body>
-              <Card.Title>Verbundene Schüler</Card.Title>
-              <ul>
-                {students.map((student) => (
-                  <li key={student.id}>{student.name}</li>
-                ))}
-              </ul>
-              {/* Beispiel: wenn keine Schüler da sind, könntest du hier eine Meldung anzeigen */}
-              {students.length === 0 && (
-                <p className="text-muted">Bisher keine Schüler verbunden.</p>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+    <Container className="mt-5">
+      <Card className="shadow p-4">
+        <Card.Header className="text-center">Teacher Panel</Card.Header>
+        <Card.Body>
+          <Card.Title className="text-center">Room Details</Card.Title>
+          <Card.Text>
+            <strong>Room ID:</strong> {room.id}
+          </Card.Text>
+          <Card.Text>
+            <strong>Room Name:</strong> {room.name}
+          </Card.Text>
+          <Card.Text>
+            <strong>Room Code:</strong> {room.code}
+          </Card.Text>
+          <Card.Text>
+            <strong>Created At:</strong>{" "}
+            {new Date(room.created_at).toLocaleString()}
+          </Card.Text>
+        </Card.Body>
+      </Card>
+      {room.id && <RoomMembers id={room.id} />}
     </Container>
   );
 }

@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import RegisterPage from "./components/RegisterPage";
 import LoginPage from "./components/LoginPage";
 import RoleSelection from "./components/RoleSelection";
-import RoomPage from "./components/RoomPage";
+import Room from "./components/Room";
 
 function App() {
   return (
@@ -11,7 +11,7 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/role-selection" element={<RoleSelection />} />
-        <Route path="/rooms/:roomId" element={<RoomPage />} />
+        <Route path="/rooms/:roomId" element={<Room />} />
       </Routes>
     </Router>
   );

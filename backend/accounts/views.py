@@ -4,6 +4,8 @@ from rest_framework import status
 from .serializers import RegisterSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from rest_framework.permissions import IsAuthenticated
+
 
 class RegisterView(APIView):
     @swagger_auto_schema(
@@ -23,3 +25,21 @@ class RegisterView(APIView):
             serializer.save()
             return Response({"detail": "Registration successfull."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class GetRoleView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_description="Gets the role of the authenticated user.",
+        responses={
+            200: openapi.Response(
+                description="Role retrieved successfully.",
+                examples={"application/json": {"role": "student"}}
+            ),
+            401: "Unauthorized"
+        },
+        security=[{'Bearer': []}]
+    )
+    def get(self, request, format=None):
+        user = request.user
+        return Response({"role": user.role}, status=status.HTTP_200_OK)
