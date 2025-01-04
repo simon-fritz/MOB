@@ -1,16 +1,40 @@
-import React from "react";
-import { useLocation } from "react-router-dom";
+// src/components/RoomPage.jsx
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Card, Container } from "react-bootstrap";
+import RoomMembers from "./RoomMembers";
+import axios from "axios";
 
 function RoomPage() {
-  const location = useLocation();
+  const { roomId } = useParams();
+  const [room, setRoom] = useState(null);
+  const [error, setError] = useState("");
 
-  // Access the room data from location.state
-  const room = location.state;
+  useEffect(() => {
+    const fetchRoom = async () => {
+      try {
+        console.log(roomId, room);
+        const response = await axios.get(
+          `http://localhost:8000/api/rooms/${roomId}/`
+        );
+        setRoom(response.data);
+      } catch (err) {
+        setError("Raum nicht gefunden.");
+      }
+    };
+
+    if (roomId) {
+      fetchRoom();
+    }
+  }, [roomId]);
+
+  if (error) {
+    return <p>{error}</p>;
+  }
 
   if (!room) {
-    return <p>No room data available. Please try again.</p>;
+    return <p>Loading...</p>;
   }
 
   return (
@@ -33,6 +57,7 @@ function RoomPage() {
           </Card.Text>
         </Card.Body>
       </Card>
+      {room.id && <RoomMembers id={room.id} />}
     </Container>
   );
 }

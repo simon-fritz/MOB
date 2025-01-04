@@ -9,6 +9,8 @@ class Room(models.Model):
         unique=True,
         validators=[MinValueValidator(1000), MaxValueValidator(9999)]
     )
+    current_round = models.IntegerField(default=1)
+
 
     def save(self, *args, **kwargs):
         if self.code is None:
@@ -43,3 +45,14 @@ class RoomMembership(models.Model):
 
     def __str__(self):
         return f"{self.user.username} in {self.room.name}"
+    
+class Match(models.Model):
+    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    user1 = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='match_user1', on_delete=models.CASCADE)
+    user2 = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='match_user2', on_delete=models.CASCADE, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=False)
+    round = models.IntegerField()
+
+    def __str__(self):
+        return f"Match in {self.room.name} between {self.user1.username} and {self.user2.username if self.user2 else 'AI'}"

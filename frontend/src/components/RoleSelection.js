@@ -16,20 +16,20 @@ function RoleSelection({ setRole }) {
     }
     try {
       const response = await API.post("/api/rooms/", { name: roomName });
-      navigate("/room", { state: response.data });
+      navigate(`/rooms/${response.data.id}`);
     } catch (error) {
       console.error("Error creating room:", error);
       alert("Failed to create room. Please try again.");
     }
   };
 
-  const handleJoinRoom = () => {
+  const handleJoinRoom = async () => {
     if (roomNumber.trim().length === 0) {
       alert("Bitte geben Sie ein Kürzel für den Raum ein.");
       return;
     }
-    API.post("/api/rooms/join/", { code: roomNumber }).then((reponse) =>
-      console.log(reponse)
+    API.post("/api/rooms/join/", { code: roomNumber }).then((response) =>
+      navigate(`/rooms/${response.data.id}`)
     );
   };
 

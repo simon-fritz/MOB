@@ -9,6 +9,9 @@ from rest_framework.decorators import action
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()
     serializer_class = RoomSerializer
@@ -33,7 +36,11 @@ class RoomViewSet(viewsets.ModelViewSet):
         security=[{'Bearer': []}]
     )
     def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
+        response = super().create(request, *args, **kwargs)
+        if response.status_code == status.HTTP_201_CREATED:
+            room = Room.objects.get(pk=response.data['id'])
+            RoomMembership.objects.create(user=request.user, room=room)
+        return response
     
     @swagger_auto_schema(
         method='post',
@@ -94,6 +101,19 @@ class RoomViewSet(viewsets.ModelViewSet):
 
         # Otherwise create membership
         RoomMembership.objects.create(user=request.user, room=room)
+        
+        #Broadcast to channnel
+        channel_layer = get_channel_layer()
+        group_name = f"room_{room.id}"
+
+        async_to_sync(channel_layer.group_send)(
+            group_name,
+            {
+            "type": "broadcast_members_changed"
+            }
+        )
+        print("broadcasted")
+    
         return Response(
             {"detail": f"Joined room {room.name} (code {room.code}).", "id": room.id},
             status=status.HTTP_200_OK
@@ -197,3 +217,65 @@ class RoomMembershipViewSet(viewsets.ModelViewSet):
         memberships = RoomMembership.objects.filter(room=room)
         serializer = RoomMembershipSerializer(memberships, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @swagger_auto_schema(
+        method='post',
+        operation_description="Activate the current round for the room.",
+        responses={
+            200: openapi.Response(description="Round activated."),
+            404: openapi.Response(description="Room not found.")
+        },
+        security=[{'Bearer': []}]
+    )
+    @action(
+        detail=True,
+        methods=['post'],
+        url_path='activate-round',
+        permission_classes=[permissions.IsAuthenticated]
+    )
+    def activate_round(self, request, pk=None):
+        """
+        POST /rooms/<room_id>/activate-round/
+        Activates the current round for the room.
+        """
+        try:
+            room = self.get_object()
+        except Room.DoesNotExist:
+            return Response({"detail": "Room not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Logic to activate the round
+        room.current_round_active = True
+        room.save()
+
+        return Response({"detail": "Round activated."}, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        method='post',
+        operation_description="Stops the active round and increments the round for the room.",
+        responses={
+            200: openapi.Response(description="Round incremented."),
+            404: openapi.Response(description="Room not found.")
+        },
+        security=[{'Bearer': []}]
+    )
+    @action(
+        detail=True,
+        methods=['post'],
+        url_path='increment-round',
+        permission_classes=[permissions.IsAuthenticated]
+    )
+    def increment_round(self, request, pk=None):
+        """
+        POST /rooms/<room_id>/increment-round/
+        Stops the active round and increments the round for the room.
+        """
+        try:
+            room = self.get_object()
+        except Room.DoesNotExist:
+            return Response({"detail": "Room not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Logic to increment the round
+        room.current_round += 1
+        room.save()
+
+        return Response({"detail": "Round incremented."}, status=status.HTTP_200_OK)
