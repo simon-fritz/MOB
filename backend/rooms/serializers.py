@@ -5,7 +5,7 @@ from .models import Room, RoomMembership
 class RoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
-        fields = ['id', 'name', 'code', 'created_at']
+        fields = ['id', 'name', 'code', 'created_at', "current_round"]
         read_only_fields = ['id', 'code', 'created_at']
 
 

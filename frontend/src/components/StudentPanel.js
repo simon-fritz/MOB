@@ -1,39 +1,45 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Card, Container } from "react-bootstrap";
 import RoomMembers from "./RoomMembers";
-import axios from "axios";
+import { useState, useEffect } from "react";
 
-function StudentPanel() {
-  const { roomId } = useParams();
-  const [room, setRoom] = useState(null);
-  const [error, setError] = useState("");
-
+function StudentPanel({ room }) {
+  const [members, setMembers] = useState([]);
+  const [socketStatus, setSocketStatus] = useState("Disconnected");
+  const [socket, setSocket] = useState(null);
   useEffect(() => {
-    const fetchRoom = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:8000/api/rooms/${roomId}/`
-        );
-        setRoom(response.data);
-      } catch (err) {
-        setError("Raum nicht gefunden.");
+    const token = localStorage.getItem("accessToken");
+    // TODO: BACKEND URL ins env
+    const socket = new WebSocket(
+      `ws://localhost:8000/ws/rooms/${room.id}/?token=${token}`
+    );
+    socket.onopen = () => {
+      setSocketStatus("Connected");
+      setSocket(socket);
+    };
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === "member_list") {
+        setMembers(data.members);
       }
     };
 
-    if (roomId) {
-      fetchRoom();
-    }
-  }, [roomId]);
+    socket.onclose = () => {
+      setSocketStatus("Disconnected");
+      setSocket(null);
+    };
 
-  if (error) {
-    return <p>{error}</p>;
-  }
+    socket.onerror = (error) => {
+      console.error("WebSocket Fehler:", error);
+    };
 
-  if (!room) {
-    return <p>Loading...</p>;
-  }
+    return () => {
+      socket.close();
+    };
+  }, [room.id]);
+  console.log(socket);
 
   return (
     <Container className="mt-5">
@@ -54,9 +60,10 @@ function StudentPanel() {
             <strong>Created At:</strong>{" "}
             {new Date(room.created_at).toLocaleString()}
           </Card.Text>
+          <p>Status der WebSocket-Verbindung: {socketStatus}</p>
         </Card.Body>
       </Card>
-      {room.id && <RoomMembers id={room.id} />}
+      {room.id && <RoomMembers members={members} />}
     </Container>
   );
 }

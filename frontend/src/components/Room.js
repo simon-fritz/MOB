@@ -3,9 +3,31 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import StudentPanel from "./StudentPanel";
 import TeacherPanel from "./TeacherPanel";
 import API from "./api";
+import { useParams } from "react-router-dom";
+import axios from "axios";
 
 function Room() {
   const [isStudent, setIsStudent] = useState(null);
+  const { roomId } = useParams();
+  const [room, setRoom] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchRoom = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:8000/api/rooms/${roomId}/`
+        );
+        setRoom(response.data);
+      } catch (err) {
+        setError("Raum nicht gefunden.");
+      }
+    };
+
+    if (roomId) {
+      fetchRoom();
+    }
+  }, [roomId]);
 
   useEffect(() => {
     API.get("/accounts/get-role/")
@@ -19,15 +41,19 @@ function Room() {
         }
       })
       .catch((error) => {
-        console.error("Error fetching role:", error);
+        setError(error);
         setIsStudent(null);
       });
   }, []);
 
+  if (error) {
+    return <p>{error}</p>;
+  }
+
   return (
     <div>
-      {isStudent === true && <StudentPanel />}
-      {isStudent === false && <TeacherPanel />}
+      {room && isStudent === true && <StudentPanel room={room} />}
+      {room && isStudent === false && <TeacherPanel room={room} />}
       {isStudent === null && <p>Loading...</p>}
     </div>
   );
