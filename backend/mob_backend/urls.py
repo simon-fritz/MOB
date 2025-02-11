@@ -17,7 +17,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     # Swagger UI
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0),
+    path('', schema_view.with_ui('swagger', cache_timeout=0),
          name='schema-swagger-ui'),
    # Admin and RoomManager API
     path('admin/', admin.site.urls),
