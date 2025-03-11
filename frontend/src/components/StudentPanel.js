@@ -1,45 +1,44 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Card, Container } from "react-bootstrap";
 import RoomMembers from "./RoomMembers";
-import { useState, useEffect } from "react";
+import PrivateChat from "./PrivateChat"; // Importiere den privaten Chat Component
 
-function StudentPanel({ room }) {
+function StudentPanel({ room, user }) {
   const [members, setMembers] = useState([]);
   const [socketStatus, setSocketStatus] = useState("Disconnected");
   const [socket, setSocket] = useState(null);
+  const token = localStorage.getItem("accessToken");
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    // TODO: BACKEND URL ins env
-    const socket = new WebSocket(
+    // TODO: BACKEND URL ins env auslagern  
+    const ws = new WebSocket(
       `ws://localhost:8000/ws/rooms/${room.id}/?token=${token}`
     );
-    socket.onopen = () => {
+    ws.onopen = () => {
       setSocketStatus("Connected");
-      setSocket(socket);
+      setSocket(ws);
     };
 
-    socket.onmessage = (event) => {
+    ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === "member_list") {
         setMembers(data.members);
       }
     };
 
-    socket.onclose = () => {
+    ws.onclose = () => {
       setSocketStatus("Disconnected");
       setSocket(null);
     };
 
-    socket.onerror = (error) => {
+    ws.onerror = (error) => {
       console.error("WebSocket Fehler:", error);
     };
 
     return () => {
-      socket.close();
+      ws.close();
     };
   }, [room.id]);
-  console.log(socket);
 
   return (
     <Container className="mt-5">
@@ -63,7 +62,19 @@ function StudentPanel({ room }) {
           <p>Status der WebSocket-Verbindung: {socketStatus}</p>
         </Card.Body>
       </Card>
+
       {room.id && <RoomMembers members={members} />}
+
+      <Card className="shadow p-4 mt-4">
+        <Card.Header className="text-center">Privater Chat</Card.Header>
+        <Card.Body>
+            <PrivateChat
+              room={room}
+              user={user}
+              token={token}
+            />
+        </Card.Body>
+      </Card>
     </Container>
   );
 }

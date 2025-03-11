@@ -56,3 +56,6 @@ class Match(models.Model):
 
     def __str__(self):
         return f"Match in {self.room.name} between {self.user1.username} and {self.user2.username if self.user2 else 'AI'}"
+
+    class Meta:
+        unique_together = (('user1', 'user2', 'room', 'round'),)

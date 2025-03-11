@@ -4,9 +4,11 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async
 
 from accounts.models import CustomUser
+from .chat_with_ai import chat_with_ai
 from .models import Room, RoomMembership, Match
 from django.contrib.auth.models import AnonymousUser
 import random
+from django.db.models import Q
 
 logger = logging.getLogger(__name__)
 
@@ -111,20 +113,46 @@ class RoomConsumer(AsyncWebsocketConsumer):
         for i in range(0, len(students), 2):
             user1 = students[i]
             user2 = students[i + 1] if i + 1 < len(students) else None
-            Match.objects.create(room=room, user1_id=user1, user2_id=user2, round=room.current_round)
+            Match.objects.create(room=room, user1_id=user1, user2_id=user2, round=room.current_round, is_active=True)
 
     async def send_private_message(self, data):
-        match_id = data['match_id']
+        print("hey--------------")
+        print(data)
+        user = data['user']
         message = data['message']
+        room_id = data['room_id']
+        room_round = data['room_round']
         #if match with ai
-        match = await sync_to_async(Match.objects.get)(id=match_id)
+
+        match = await sync_to_async(Match.objects.get)(
+            Q(user1=user) | Q(user2=user),
+            room=room_id,
+            round=room_round
+        )
 
         if match.is_active:
-            await self.channel_layer.group_send(
-                f"match_{match_id}",
-                {
-                    'type': 'chat_message',
-                    'message': message,
-                    'username': self.scope['user'].username
-                }
-            )
+            if match.user2_id is None:
+                print("Nachricht an AI")
+                #ai_response = chat_with_ai([{"role": "user", "content": message}])
+                ai_response = "AI Response zu " + message
+                await self.channel_layer.send(
+                    f"room_{room_id}",
+                    {
+                        'type': 'private_message',
+                        'message': ai_response,
+                        'sender': "?",
+                        'receiver': user
+                    }
+                )
+            else:
+                # Nachricht an den anderen Benutzer senden
+                receiver = match.user1 if match.user2 == user else match.user2
+                await self.channel_layer.send(
+                    f"room_{room_id}",
+                    {
+                        'type': 'private_message',
+                        'message': message,
+                        'sender': "?",
+                        'receiver': receiver
+                    }
+                )

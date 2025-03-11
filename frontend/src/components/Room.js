@@ -8,6 +8,7 @@ import axios from "axios";
 
 function Room() {
   const [isStudent, setIsStudent] = useState(null);
+  const [user, setUser] = useState("");
   const { roomId } = useParams();
   const [room, setRoom] = useState(null);
   const [error, setError] = useState("");
@@ -30,7 +31,7 @@ function Room() {
   }, [roomId]);
 
   useEffect(() => {
-    API.get("/accounts/get-role/")
+    API.get("/accounts/me/")
       .then((response) => {
         if (response.data.role === "student") {
           setIsStudent(true);
@@ -39,6 +40,7 @@ function Room() {
         } else {
           setIsStudent(null);
         }
+        setUser(response.data.id);
       })
       .catch((error) => {
         setError(error);
@@ -52,8 +54,8 @@ function Room() {
 
   return (
     <div>
-      {room && isStudent === true && <StudentPanel room={room} />}
-      {room && isStudent === false && <TeacherPanel room={room} />}
+      {room && isStudent === true && <StudentPanel room={room} user={user} />}
+      {room && isStudent === false && <TeacherPanel room={room} user={user}/>}
       {isStudent === null && <p>Loading...</p>}
     </div>
   );

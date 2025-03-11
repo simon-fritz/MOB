@@ -1,6 +1,6 @@
 # venvs
 env/
-.venv/
+venv/
 
 # python cashes
 __pycache__/

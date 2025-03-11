@@ -40,6 +40,6 @@ class MeView(APIView):
         },
         security=[{'Bearer': []}]
     )
-    def get(self, request, format=None):
+    def get(self, request, format=None):    
         user = request.user
-        return Response({"role": user.role, "username": user.username}, status=status.HTTP_200_OK)
+        return Response({"role": user.role, "username": user.username, "id":user.id}, status=status.HTTP_200_OK)
