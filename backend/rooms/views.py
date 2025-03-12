@@ -101,18 +101,6 @@ class RoomViewSet(viewsets.ModelViewSet):
 
         # Otherwise create membership
         RoomMembership.objects.create(user=request.user, room=room)
-        
-        #Broadcast to channnel
-        channel_layer = get_channel_layer()
-        group_name = f"room_{room.id}"
-
-        async_to_sync(channel_layer.group_send)(
-            group_name,
-            {
-            "type": "broadcast_members_changed"
-            }
-        )
-        print("broadcasted")
     
         return Response(
             {"detail": f"Joined room {room.name} (code {room.code}).", "id": room.id},

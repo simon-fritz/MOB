@@ -21,27 +21,41 @@ class RoomConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
         logger.info(f"Benutzer {self.user.username} verbindet sich mit Raum {self.room_id}")
-        self.group_name = f"room_{self.room_id}"
 
-        logger.info(f"Beitreten zur Gruppe: {self.group_name}")
+        # Ermitteln des Raums (room_id) aus der URL
+        self.room_id = self.scope['url_route']['kwargs']['room_id']
+        self.room_group_name = f"room_{self.room_id}"
+        self.user_group_name = f"user_{self.user.id}"
 
-        # Gruppe beitreten
+        # Beitreten zur Raum-Gruppe
         await self.channel_layer.group_add(
-            self.group_name,
+            self.room_group_name,
+            self.channel_name
+        )
+
+        # Beitreten zur privaten Benutzer-Gruppe
+        await self.channel_layer.group_add(
+            self.user_group_name,
             self.channel_name
         )
 
         await self.accept()
         logger.info(f"WebSocket-Verbindung akzeptiert für Raum {self.room_id}")
+        logger.info(f"WebSocket-Verbindung akzeptiert für User {self.user_group_name}")
+
 
         # Mitgliederliste senden
-        await self.send_members_list()
+        await self.get_members()
 
     async def disconnect(self, close_code):
         await self.remove_room_membership()
-        await self.broadcast_members_changed()  
+        await self.get_members()  
         await self.channel_layer.group_discard(
-            self.group_name,  # Korrigierter Gruppenname
+            self.room_group_name,
+            self.channel_name
+        )
+        await self.channel_layer.group_discard(
+            self.user_group_name,
             self.channel_name
         )
 
@@ -51,48 +65,46 @@ class RoomConsumer(AsyncWebsocketConsumer):
         command = data.get('command', None)
 
         if command == 'get_members':
-            await self.send_members_list()
+            await self.get_members()
 
         if command == 'match_users':
             await self.match_users()
 
         if command == 'send_private_message':
             await self.send_private_message(data)
+            
+    async def member_list(self, event):
+        members = event.get("members", [])
+        await self.send(text_data=json.dumps({
+            "type": "member_list",
+            "members": members
+        }))
+        
+    async def private_message(self, event):
+        message = event.get("message", "")
+        await self.send(text_data=json.dumps({
+            "type": "private_message",
+            "message": message
+        }))
 
-    async def send_members_list(self):
+    async def get_members(self):
         logger.info("Sende Mitgliederliste")
         members = await self.get_room_members()
-        await self.send(text_data=json.dumps({
+        await self.channel_layer.group_send(
+        self.room_group_name,
+        {
             'type': 'member_list',
             'members': members
-        }))
+        })
 
     @sync_to_async
     def get_room_members(self):
-        logger.info("Hole Mitglieder aus der Datenbank")
         try:
             room = Room.objects.get(id=self.room_id)
         except Room.DoesNotExist:
-            logger.error(f"Raum mit ID {self.room_id} existiert nicht.")
             return []
-
         memberships = RoomMembership.objects.filter(room=room)
         return [m.user.username for m in memberships]
-
-    # -------------- Broadcast --------------
-    async def broadcast_members_changed(self, event=None):
-        logger.info("Broadcast: Mitglieder haben sich geändert")
-        # Sende eine Nachricht an die Gruppe, um die Mitgliederliste zu aktualisieren
-        await self.channel_layer.group_send(
-            self.group_name,
-            {
-                'type': 'members_changed'
-            }
-        )
-
-    async def members_changed(self, event):
-        # Handler für das 'members_changed' Ereignis
-        await self.send_members_list()
 
     @sync_to_async
     def remove_room_membership(self):
@@ -132,27 +144,28 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
         if match.is_active:
             if match.user2_id is None:
-                print("Nachricht an AI")
+                print("Nachricht an AI an user_", user)
+                print(f"user_{user}")
+                print(f"user_{user}")
+                print(f"user_{user}")
+                print(f"user_{user}")
+
                 #ai_response = chat_with_ai([{"role": "user", "content": message}])
                 ai_response = "AI Response zu " + message
-                await self.channel_layer.send(
-                    f"room_{room_id}",
+                await self.channel_layer.group_send(
+                    f"user_{user}",
                     {
                         'type': 'private_message',
                         'message': ai_response,
-                        'sender': "?",
-                        'receiver': user
                     }
                 )
             else:
                 # Nachricht an den anderen Benutzer senden
                 receiver = match.user1 if match.user2 == user else match.user2
-                await self.channel_layer.send(
-                    f"room_{room_id}",
+                await self.channel_layer.group_send(
+                    f"user_{receiver}",
                     {
                         'type': 'private_message',
                         'message': message,
-                        'sender': "?",
-                        'receiver': receiver
                     }
                 )

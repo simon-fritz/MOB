@@ -21,7 +21,7 @@ const PrivateChat = ({ room, user ,token}) => {
       if (data.type === "private_message") {
         setMessages((prevMessages) => [
           ...prevMessages,
-          { username: data.username, message: data.message },
+          { username: "?", message: data.message },
         ]);
       }
     };
@@ -60,7 +60,7 @@ const PrivateChat = ({ room, user ,token}) => {
       // Füge die eigene Nachricht sofort lokal zum Chatverlauf hinzu
       setMessages((prevMessages) => [
         ...prevMessages,
-        { user, message: newMessage },
+        { username: "Du", message: newMessage },
       ]);
       setNewMessage("");
     }
