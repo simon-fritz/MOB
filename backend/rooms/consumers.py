@@ -128,8 +128,6 @@ class RoomConsumer(AsyncWebsocketConsumer):
             Match.objects.create(room=room, user1_id=user1, user2_id=user2, round=room.current_round, is_active=True)
 
     async def send_private_message(self, data):
-        print("hey--------------")
-        print(data)
         user = data['user']
         message = data['message']
         room_id = data['room_id']
@@ -144,12 +142,6 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
         if match.is_active:
             if match.user2_id is None:
-                print("Nachricht an AI an user_", user)
-                print(f"user_{user}")
-                print(f"user_{user}")
-                print(f"user_{user}")
-                print(f"user_{user}")
-
                 #ai_response = chat_with_ai([{"role": "user", "content": message}])
                 ai_response = "AI Response zu " + message
                 await self.channel_layer.group_send(
@@ -161,7 +153,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
                 )
             else:
                 # Nachricht an den anderen Benutzer senden
-                receiver = match.user1 if match.user2 == user else match.user2
+                receiver = match.user1_id if match.user2_id == user else match.user2_id
                 await self.channel_layer.group_send(
                     f"user_{receiver}",
                     {
