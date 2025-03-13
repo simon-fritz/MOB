@@ -2,11 +2,13 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Card, Container } from "react-bootstrap";
 import RoomMembers from "./RoomMembers";
+import Timer from "./Timer";
 
 function TeacherPanel({ room }) {
   const [members, setMembers] = useState([]);
   const [socketStatus, setSocketStatus] = useState("Disconnected");
   const [socket, setSocket] = useState(null);
+  const [timerString, setTimerString] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -23,6 +25,9 @@ function TeacherPanel({ room }) {
       const data = JSON.parse(event.data);
       if (data.type === "member_list") {
         setMembers(data.members);
+      }
+      if (data.type === "timer") {
+        setTimerString(data.seconds);
       }
     };
 
@@ -67,6 +72,7 @@ function TeacherPanel({ room }) {
           </Card.Text>
           <p>Status der WebSocket-Verbindung: {socketStatus}</p>
           <button onClick={handleMatchUsers}>Match Users</button>
+          <Timer timerString={timerString} />
         </Card.Body>
       </Card>
       {room.id && <RoomMembers members={members} />}

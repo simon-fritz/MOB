@@ -1,5 +1,6 @@
 import json
 import logging
+import asyncio  # Für den asynchronen Timer
 from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async
 
@@ -22,8 +23,6 @@ class RoomConsumer(AsyncWebsocketConsumer):
             return
         logger.info(f"Benutzer {self.user.username} verbindet sich mit Raum {self.room_id}")
 
-        # Ermitteln des Raums (room_id) aus der URL
-        self.room_id = self.scope['url_route']['kwargs']['room_id']
         self.room_group_name = f"room_{self.room_id}"
         self.user_group_name = f"user_{self.user.id}"
 
@@ -42,7 +41,6 @@ class RoomConsumer(AsyncWebsocketConsumer):
         await self.accept()
         logger.info(f"WebSocket-Verbindung akzeptiert für Raum {self.room_id}")
         logger.info(f"WebSocket-Verbindung akzeptiert für User {self.user_group_name}")
-
 
         # Mitgliederliste senden
         await self.get_members()
@@ -69,6 +67,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
         if command == 'match_users':
             await self.match_users()
+            asyncio.create_task(self.start_timer(60))
 
         if command == 'send_private_message':
             await self.send_private_message(data)
@@ -87,15 +86,32 @@ class RoomConsumer(AsyncWebsocketConsumer):
             "message": message
         }))
 
+    # Diese Methode empfängt den Countdown-Event und sendet den aktuellen Sekundenwert an den Client
+    async def timer(self, event):
+        seconds = event.get("seconds", 0)
+        await self.send(text_data=json.dumps({
+            "type": "timer",
+            "seconds": seconds
+        }))
+
+    # Sobald der Timer abgelaufen ist, informieren wir die Clients, dass sie jetzt raten können.
+    async def guess_phase(self, event):
+        message = event.get("message", "")
+        await self.send(text_data=json.dumps({
+            "type": "guess_phase",
+            "message": message
+        }))
+
     async def get_members(self):
         logger.info("Sende Mitgliederliste")
         members = await self.get_room_members()
         await self.channel_layer.group_send(
-        self.room_group_name,
-        {
-            'type': 'member_list',
-            'members': members
-        })
+            self.room_group_name,
+            {
+                'type': 'member_list',
+                'members': members
+            }
+        )
 
     @sync_to_async
     def get_room_members(self):
@@ -132,7 +148,6 @@ class RoomConsumer(AsyncWebsocketConsumer):
         message = data['message']
         room_id = data['room_id']
         room_round = data['room_round']
-        #if match with ai
 
         match = await sync_to_async(Match.objects.get)(
             Q(user1=user) | Q(user2=user),
@@ -142,8 +157,8 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
         if match.is_active:
             if match.user2_id is None:
-                #ai_response = chat_with_ai([{"role": "user", "content": message}])
                 ai_response = "AI Response zu " + message
+                #ai_response = chat_with_ai([{"role": "user", "content": message}])
                 await self.channel_layer.group_send(
                     f"user_{user}",
                     {
@@ -152,7 +167,6 @@ class RoomConsumer(AsyncWebsocketConsumer):
                     }
                 )
             else:
-                # Nachricht an den anderen Benutzer senden
                 receiver = match.user1_id if match.user2_id == user else match.user2_id
                 await self.channel_layer.group_send(
                     f"user_{receiver}",
@@ -161,3 +175,23 @@ class RoomConsumer(AsyncWebsocketConsumer):
                         'message': message,
                     }
                 )
+
+    # Neue Methode: Startet den Timer und sendet jede Sekunde den aktuellen Countdown an alle Clients im Raum
+    async def start_timer(self, duration):
+        for remaining in range(duration, -1, -1):
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'timer',
+                    'seconds': remaining
+                }
+            )
+            await asyncio.sleep(1)
+        # Nach Ablauf der Zeit informieren wir die Clients, dass sie nun raten können
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'guess_phase',
+                'message': "Zeit abgelaufen! Jetzt könnt ihr raten, ob ihr mit einer AI oder einem Menschen geschrieben habt."
+            }
+        )

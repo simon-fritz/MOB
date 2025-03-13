@@ -3,12 +3,15 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { Card, Container } from "react-bootstrap";
 import RoomMembers from "./RoomMembers";
 import PrivateChat from "./PrivateChat"; // Importiere den privaten Chat Component
+import Timer from "./Timer";
 
 function StudentPanel({ room, user }) {
   const [members, setMembers] = useState([]);
   const [socketStatus, setSocketStatus] = useState("Disconnected");
   const [socket, setSocket] = useState(null);
   const token = localStorage.getItem("accessToken");
+  const [timerString, setTimerString] = useState("");
+  
   useEffect(() => {
     // TODO: BACKEND URL ins env auslagern  
     const ws = new WebSocket(
@@ -23,6 +26,9 @@ function StudentPanel({ room, user }) {
       const data = JSON.parse(event.data);
       if (data.type === "member_list") {
         setMembers(data.members);
+      }
+      if (data.type === "timer") {
+        setTimerString(data.seconds);
       }
     };
 
@@ -60,6 +66,7 @@ function StudentPanel({ room, user }) {
             {new Date(room.created_at).toLocaleString()}
           </Card.Text>
           <p>Status der WebSocket-Verbindung: {socketStatus}</p>
+          <Timer timerString={timerString} />
         </Card.Body>
       </Card>
 
