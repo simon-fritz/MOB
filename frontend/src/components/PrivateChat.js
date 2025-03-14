@@ -66,6 +66,23 @@ const PrivateChat = ({ room, user ,token}) => {
     }
   };
 
+  const handleGuess = (gueessedAI) => {
+    console.log("Guess senden:", gueessedAI? "AI" : "Human");
+    if (
+      ws.current &&
+      ws.current.readyState === WebSocket.OPEN
+    ) {
+      const payload = {
+        command: "make_guess",
+        //user: user,
+        guessed_ai: gueessedAI,
+        room_round: room.current_round,
+      };
+      ws.current.send(JSON.stringify(payload));
+    }
+  };
+
+
   // Versende Nachricht per Enter-Taste
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
@@ -109,6 +126,8 @@ const PrivateChat = ({ room, user ,token}) => {
         >
           Senden
         </button>
+        <button onClick={() => handleGuess(false)}>Guess human</button>
+        <button onClick={() => handleGuess(true)}>Guess AI</button>
       </div>
     </div>
   );

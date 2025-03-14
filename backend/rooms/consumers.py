@@ -6,7 +6,7 @@ from asgiref.sync import sync_to_async
 
 from accounts.models import CustomUser
 from .chat_with_ai import chat_with_ai
-from .models import Room, RoomMembership, Match
+from .models import Room, RoomMembership, Match, Guess
 from django.contrib.auth.models import AnonymousUser
 import random
 from django.db.models import Q
@@ -72,6 +72,9 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
         if command == 'send_private_message':
             await self.send_private_message(data)
+            
+        if command == 'make_guess':
+            await self.make_guess(data)
             
     async def member_list(self, event):
         members = event.get("members", [])
@@ -202,8 +205,49 @@ class RoomConsumer(AsyncWebsocketConsumer):
                         'message': message,
                     }
                 )
+                
+    async def make_guess(self, data):
+        guessed_ai = data.get('guessed_ai') 
+        room_round = data.get('room_round')
+        user = self.user
 
-    # Neue Methode: Startet den Timer und sendet jede Sekunde den aktuellen Countdown an alle Clients im Raum
+        try:
+            match = await sync_to_async(Match.objects.get)(
+                Q(user1=user) | Q(user2=user),
+                room=self.room_id,
+                round=room_round
+            )
+        except Match.DoesNotExist:
+            logger.error("Kein passender Match gefunden für make_guess")
+            await self.send(text_data=json.dumps({
+                "type": "error",
+                "message": f"Kein passender Match in runde {room_round} gefunden."
+            }))
+            return
+
+        # Bestimme, ob der Tipp richtig ist:
+        # Falls match.user2_id None ist, interagierte der Schüler mit einer AI.
+        if match.user2_id is None:
+            correct = (guessed_ai is True)
+        else:
+            correct = (guessed_ai is False)
+
+        # Speichere den Guess in der Datenbank
+        await sync_to_async(Guess.objects.create)(
+            room=await sync_to_async(lambda: match.room)(),
+            round=room_round,
+            user=user,
+            guessed_ai=guessed_ai,
+            is_correct=correct
+        )
+
+        # Rückmeldung an den Benutzer senden
+        await self.send(text_data=json.dumps({
+            "type": "make_guess",
+            "is_correct": correct,
+            "message": "Dein Tipp war " + ("richtig" if correct else "falsch")
+        }))
+
     async def start_timer(self, duration):
         for remaining in range(duration, -1, -1):
             await self.channel_layer.group_send(

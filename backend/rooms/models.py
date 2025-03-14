@@ -59,3 +59,17 @@ class Match(models.Model):
 
     class Meta:
         unique_together = (('user1', 'user2', 'room', 'round'),)
+        
+class Guess(models.Model):
+    room = models.ForeignKey('Room', on_delete=models.CASCADE)
+    round = models.IntegerField()
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE
+    )
+    guessed_ai = models.BooleanField()
+    is_correct = models.BooleanField()
+
+    def __str__(self):
+        result = "richtig" if self.is_correct else "falsch"
+        return f"Guess by {self.user.username} in room {self.room.id} round {self.round}: {result}"
