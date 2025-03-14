@@ -9,7 +9,7 @@ class Room(models.Model):
         unique=True,
         validators=[MinValueValidator(1000), MaxValueValidator(9999)]
     )
-    current_round = models.IntegerField(default=1)
+    current_round = models.IntegerField(default=0)
 
 
     def save(self, *args, **kwargs):

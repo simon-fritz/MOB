@@ -67,8 +67,7 @@ function TeacherPanel({ room }) {
             <strong>Room Code:</strong> {room.code}
           </Card.Text>
           <Card.Text>
-            <strong>Created At:</strong>{" "}
-            {new Date(room.created_at).toLocaleString()}
+            <strong>Round:</strong> {room.current_round}
           </Card.Text>
           <p>Status der WebSocket-Verbindung: {socketStatus}</p>
           <button onClick={handleMatchUsers}>Match Users</button>

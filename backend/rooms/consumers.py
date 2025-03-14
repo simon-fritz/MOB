@@ -67,6 +67,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
         if command == 'match_users':
             await self.match_users()
+            #start the round timer
             asyncio.create_task(self.start_timer(60))
 
         if command == 'send_private_message':
@@ -101,6 +102,13 @@ class RoomConsumer(AsyncWebsocketConsumer):
             "type": "guess_phase",
             "message": message
         }))
+        
+    async def round_started(self, event):
+        current_round = event.get("current_round", "")
+        await self.send(text_data=json.dumps({
+            "type": "round_started",
+            "current_round": current_round
+        }))
 
     async def get_members(self):
         logger.info("Sende Mitgliederliste")
@@ -131,17 +139,36 @@ class RoomConsumer(AsyncWebsocketConsumer):
         except Room.DoesNotExist:
             logger.error(f"Raum mit ID {self.room_id} existiert nicht.")
 
-    @sync_to_async
-    def match_users(self):
-        room = Room.objects.get(id=self.room_id)
-        students = list(RoomMembership.objects.filter(room=room).values_list('user', flat=True))
-        students = [student for student in students if CustomUser.objects.get(id=student).role == 'student']
+    async def match_users(self):
+        room = await sync_to_async(Room.objects.get)(id=self.room_id)
+        room.current_round += 1
+        await sync_to_async(room.save)()
+        memberships = await sync_to_async(list)(
+            RoomMembership.objects.filter(room=room).values_list('user', flat=True)
+        )
+        students = []
+        for student_id in memberships:
+            user = await sync_to_async(CustomUser.objects.get)(id=student_id)
+            if user.role == 'student':
+                students.append(student_id)
         random.shuffle(students)
-
         for i in range(0, len(students), 2):
             user1 = students[i]
             user2 = students[i + 1] if i + 1 < len(students) else None
-            Match.objects.create(room=room, user1_id=user1, user2_id=user2, round=room.current_round, is_active=True)
+            await sync_to_async(Match.objects.create)(
+                room=room,
+                user1_id=user1,
+                user2_id=user2,
+                round=room.current_round,
+                is_active=True
+            )
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'round_started',
+                'current_round': room.current_round
+            }
+        )
 
     async def send_private_message(self, data):
         user = data['user']
