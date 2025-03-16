@@ -10,6 +10,10 @@ function TeacherPanel({ room }) {
   const [socket, setSocket] = useState(null);
   const [timerString, setTimerString] = useState("");
 
+  let roundPaused = (timerString === "" || parseInt(timerString, 10) === 0);
+
+  console.log("Timerstring: ", timerString);
+
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     // TODO: BACKEND URL ins env
@@ -29,6 +33,7 @@ function TeacherPanel({ room }) {
       if (data.type === "timer") {
         setTimerString(data.seconds);
       }
+      console.log(data);
     };
 
     socket.onclose = () => {
@@ -70,7 +75,9 @@ function TeacherPanel({ room }) {
             <strong>Round:</strong> {room.current_round}
           </Card.Text>
           <p>Status der WebSocket-Verbindung: {socketStatus}</p>
-          <button onClick={handleMatchUsers}>Match Users</button>
+          {roundPaused && (
+            <button onClick={handleMatchUsers}>Match Users</button>
+          )}
           <Timer timerString={timerString} />
         </Card.Body>
       </Card>
