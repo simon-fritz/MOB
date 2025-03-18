@@ -33,6 +33,9 @@ function TeacherPanel({ room }) {
       if (data.type === "timer") {
         setTimerString(data.seconds);
       }
+      if (data.type === "round_started"){
+        room.current_round = parseInt(data.current_round, 10);
+      }
       console.log(data);
     };
 
@@ -48,7 +51,7 @@ function TeacherPanel({ room }) {
     return () => {
       socket.close();
     };
-  }, [room.id]);
+  }, [room]);
 
   const handleMatchUsers = () => {
     if (socket) {

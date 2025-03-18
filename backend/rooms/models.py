@@ -63,12 +63,13 @@ class Match(models.Model):
 class Guess(models.Model):
     room = models.ForeignKey('Room', on_delete=models.CASCADE)
     round = models.IntegerField()
-    user = models.OneToOneField(
+    user = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE
     )
     guessed_ai = models.BooleanField()
     is_correct = models.BooleanField()
+    created_at = models.DateTimeField(auto_now_add=True) 
 
     def __str__(self):
         result = "richtig" if self.is_correct else "falsch"

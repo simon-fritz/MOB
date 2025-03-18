@@ -46,8 +46,8 @@ class RoomConsumer(AsyncWebsocketConsumer):
         await self.get_members()
 
     async def disconnect(self, close_code):
-        await self.remove_room_membership()
-        await self.get_members()  
+        #await self.remove_room_membership()
+        #await self.get_members()  
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
@@ -178,6 +178,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
         message = data['message']
         room_id = data['room_id']
         room_round = data['room_round']
+        past_messages = data['past_messages']
 
         match = await sync_to_async(Match.objects.get)(
             Q(user1=user) | Q(user2=user),
@@ -187,8 +188,9 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
         if match.is_active:
             if match.user2_id is None:
-                ai_response = "AI Response zu " + message
-                #ai_response = chat_with_ai([{"role": "user", "content": message}])
+                #ai_response = "AI Response zu " + message
+                past_messages.append({"role": "user", "content": message})
+                ai_response = chat_with_ai(past_messages)
                 await self.channel_layer.group_send(
                     f"user_{user}",
                     {
@@ -231,7 +233,6 @@ class RoomConsumer(AsyncWebsocketConsumer):
             correct = (guessed_ai is True)
         else:
             correct = (guessed_ai is False)
-
         # Speichere den Guess in der Datenbank
         await sync_to_async(Guess.objects.create)(
             room=await sync_to_async(lambda: match.room)(),
