@@ -21,6 +21,8 @@ function StudentPanel({ room, user }) {
   };
   const [roundStatus, setRoundStatus] = useState(RoundStatus.PAUSED);
 
+  const [hasTurn, setHasTurn] = useState(false);
+
   const [guessResult, setGuessResult] = useState("");
 
   const ws = useRef(null);
@@ -50,6 +52,7 @@ function StudentPanel({ room, user }) {
           ...prevMessages,
           { username: "?", message: data.message },
         ]);
+        setHasTurn(true);
       }
       if (data.type === "round_started") {
         room.current_round = data.current_round;
@@ -64,6 +67,9 @@ function StudentPanel({ room, user }) {
       if (data.type === "make_guess") {
         setGuessResult(data.is_correct ? "Richtig" : "Falsch");
         setRoundStatus(RoundStatus.RESULT);
+      }
+      if (data.type === "conversation_start") {
+        setHasTurn(data.starter);
       }
     };
 
@@ -94,7 +100,7 @@ function StudentPanel({ room, user }) {
         room_id: room.id,
         room_round: room.current_round,
         message: newMessage,
-        past_messages: messages.map((msg) => msg.username === "Du"? {"role": "user", "content": msg.message} : {"role": "assistant", "content": msg.message}),
+        past_messages: messages.map((msg) => msg.username === "Du" ? { "role": "user", "content": msg.message } : { "role": "assistant", "content": msg.message }),
       };
       ws.current.send(JSON.stringify(payload));
 
@@ -104,6 +110,7 @@ function StudentPanel({ room, user }) {
         { username: "Du", message: newMessage },
       ]);
       setNewMessage("");
+      setHasTurn(false);
     }
   };
 
@@ -161,7 +168,7 @@ function StudentPanel({ room, user }) {
           <Card.Header className="text-center">Privater Chat</Card.Header>
           <Card.Body>
             <div className="private-chat">
-              <h5>Privater Chat</h5>
+              <h5>{hasTurn ? "Du schreibst die nächste Nachricht" : "Dein Gegenüber schreibt die nächste Nachricht"}</h5>
               <div
                 className="chat-window"
                 style={{
@@ -180,22 +187,27 @@ function StudentPanel({ room, user }) {
                 ))}
               </div>
               <div className="chat-input mt-2" style={{ display: "flex" }}>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Nachricht eingeben..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                />
-                <button
-                  className="btn btn-primary ml-2"
-                  onClick={handleSend}
-                  style={{ marginLeft: "10px" }}
-                >
-                  Senden
-                </button>
-
+                {
+                  hasTurn ?
+                    (
+                      <><input
+                        type="text"
+                        className="form-control"
+                        placeholder="Nachricht eingeben..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyDown={handleKeyPress}
+                      />
+                        <button
+                          className="btn btn-primary ml-2"
+                          onClick={handleSend}
+                          style={{ marginLeft: "10px" }}
+                        >
+                          Senden
+                        </button></>)
+                    :
+                    (<></>)
+                }
               </div>
             </div>
           </Card.Body>
@@ -214,7 +226,6 @@ function StudentPanel({ room, user }) {
           <p>{guessResult}</p>
         </Card>
       }
-
     </Container>
   );
 }

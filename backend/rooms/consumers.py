@@ -76,6 +76,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
         if command == 'make_guess':
             await self.make_guess(data)
             
+            
     async def member_list(self, event):
         members = event.get("members", [])
         await self.send(text_data=json.dumps({
@@ -123,6 +124,13 @@ class RoomConsumer(AsyncWebsocketConsumer):
                 'members': members
             }
         )
+        
+    async def conversation_start(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "conversation_start",
+            "starter": event.get("starter"),
+        }))
+
 
     @sync_to_async
     def get_room_members(self):
@@ -141,11 +149,12 @@ class RoomConsumer(AsyncWebsocketConsumer):
             RoomMembership.objects.filter(room=room, user=self.user).delete()
         except Room.DoesNotExist:
             logger.error(f"Raum mit ID {self.room_id} existiert nicht.")
-
+            
     async def match_users(self):
         room = await sync_to_async(Room.objects.get)(id=self.room_id)
         room.current_round += 1
         await sync_to_async(room.save)()
+        
         memberships = await sync_to_async(list)(
             RoomMembership.objects.filter(room=room).values_list('user', flat=True)
         )
@@ -154,17 +163,69 @@ class RoomConsumer(AsyncWebsocketConsumer):
             user = await sync_to_async(CustomUser.objects.get)(id=student_id)
             if user.role == 'student':
                 students.append(student_id)
+        
         random.shuffle(students)
-        for i in range(0, len(students), 2):
+        n = len(students)
+        
+        # Bestimme die Anzahl der Schüler, die in Mensch-gegen-Mensch-Matches kommen sollen.
+        if n < 2:
+            human_human_count = 0
+        elif n == 3:
+          human_human_count = 2  
+        else:
+            desired = n // 2
+            # Für eine valide Paarung muss die Anzahl gerade sein.
+            if desired % 2 != 0:
+                desired -= 1
+            human_human_count = desired
+
+        # Erstelle die Mensch-gegen-Mensch Matches (Paarungen)
+        for i in range(0, human_human_count, 2):
             user1 = students[i]
-            user2 = students[i + 1] if i + 1 < len(students) else None
-            await sync_to_async(Match.objects.create)(
+            user2 = students[i + 1]
+            match = await sync_to_async(Match.objects.create)(
                 room=room,
                 user1_id=user1,
                 user2_id=user2,
                 round=room.current_round,
                 is_active=True
             )
+            # Sende an beide Benutzer, wer die Konversation startet (bei Mensch-Matches startet user1)
+            await self.channel_layer.group_send(
+                f"user_{user1}",
+                {
+                    'type': 'conversation_start',
+                    'starter': True,
+                }
+            )
+            await self.channel_layer.group_send(
+                f"user_{user2}",
+                {
+                    'type': 'conversation_start',
+                    'starter': False,
+                }
+            )
+
+        # Erstelle für die restlichen Schüler Matches mit der KI (user2_id = None)
+        for i in range(human_human_count, n):
+            user1 = students[i]
+            await sync_to_async(Match.objects.create)(
+                room=room,
+                user1_id=user1,
+                user2_id=None,  # KI-Match
+                round=room.current_round,
+                is_active=True
+            )
+            await self.channel_layer.group_send(
+                f"user_{user1}",
+                {
+                    'type': 'conversation_start',
+                    'starter': True,
+                }
+            )
+            # call ai
+            
+
         await self.channel_layer.group_send(
             self.room_group_name,
             {

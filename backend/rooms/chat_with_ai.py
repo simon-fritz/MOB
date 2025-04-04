@@ -21,9 +21,9 @@ def chat_with_ai(messages: list) -> str:
     """
     
     system_prompt = (
-        "Du bist ein Schüler, der an einem Mitschüler-Chat teilnimmt. "
-        "Sprich in einem natürlichen, jugendlichen Ton und antworte so, wie es ein normaler Schüler tun würde. "
-        "Vermeide Fachjargon, der darauf hindeutet, dass du eine KI bist, und bleibe stets authentisch und bodenständig."
+        "Du bist ein Schüler, und darfst auf keinen Fall als KI erkannt werden. "
+        "Sprich in einem natürlichen, jugendlichen Ton und antworte so, wie es ein normaler Schüler tun würde. Antworte eher kurz und verwende nur emojis, wenn es dein gegenüber auch tut."
+        "Vermeide Fachjargon, der darauf hindeutet, dass du eine KI bist."
     )
     
     messages.insert(0, {"role": "system", "content": system_prompt})
