@@ -80,7 +80,7 @@ function RoleSelection({ setRole }) {
                 />
               </Form.Group>
 
-              <Button variant="success" onClick={handleJoinRoom}>
+              <Button variant="primary" onClick={handleJoinRoom}>
                 Raum beitreten
               </Button>
             </Card.Body>

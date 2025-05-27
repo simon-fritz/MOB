@@ -79,7 +79,7 @@ function TeacherPanel({ room }) {
           </Card.Text>
           <p>Status der WebSocket-Verbindung: {socketStatus}</p>
           {roundPaused && (
-            <button onClick={handleMatchUsers}>Starte nächste Runde</button>
+            <button onClick={handleMatchUsers} className="btn btn-primary w-100 mb-2">Starte nächste Runde</button>
           )}
           <Timer timerString={timerString} />
         </Card.Body>
