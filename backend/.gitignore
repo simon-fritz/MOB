@@ -21,6 +21,7 @@ db.sqlite3
 
 #env
 .env
+.venv
 
 #migrations
 */migrations/
