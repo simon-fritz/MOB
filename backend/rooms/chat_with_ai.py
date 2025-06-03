@@ -1,4 +1,6 @@
 import os
+import random
+import time
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -33,4 +35,10 @@ def chat_with_ai(messages: list) -> str:
         messages=messages
     )
     
-    return completion.choices[0].message.content
+    response = completion.choices[0].message.content
+    
+    # Add a random delay to simulate human-like response time
+    delay = random.uniform(0.5, 1.5) + len(response) * 0.02
+    time.sleep(delay)
+    
+    return response
