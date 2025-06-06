@@ -33,7 +33,7 @@ function LoginPage() {
         // Redirect to RoleSelection page after modal closes
         setTimeout(() => {
           setSuccess(false); // Hide modal
-          navigate("/role-selection");
+          navigate("/");
         }, 2000);
       })
       .catch(function (err) {
@@ -53,13 +53,13 @@ function LoginPage() {
     <div className="container mt-5">
       <div className="row justify-content-center">
         <div className="col-md-6">
-          <h2 className="text-center mb-4">Login</h2>
+          <h2 className="text-center mb-4">Lehrer Login</h2>
 
           {error && <div className="alert alert-danger">{error}</div>}
 
           <form onSubmit={handleLogin}>
             <div className="form-group mb-3">
-              <label htmlFor="username">Username</label>
+              <label htmlFor="username">Benutzername</label>
               <input
                 type="text"
                 id="username"
@@ -71,7 +71,7 @@ function LoginPage() {
             </div>
 
             <div className="form-group mb-3">
-              <label htmlFor="password">Password</label>
+              <label htmlFor="password">Passwort</label>
               <input
                 type="password"
                 id="password"
@@ -92,7 +92,7 @@ function LoginPage() {
             className="btn btn-secondary w-100"
             onClick={() => navigate("/register")}
           >
-            Go To Register
+            Zur Registrierung
           </button>
         </div>
       </div>
@@ -108,18 +108,18 @@ function LoginPage() {
           <div className="modal-dialog" role="document">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Success</h5>
+                <h5 className="modal-title">Erfolg</h5>
               </div>
               <div className="modal-body">
-                <p>Login successful! Redirecting...</p>
+                <p>Login erfolgreich! Weiterleitung ...</p>
               </div>
               <div className="modal-footer">
                 <button
                   type="button"
                   className="btn btn-primary"
-                  onClick={() => navigate("/role-selection")}
+                  onClick={() => navigate("/")}
                 >
-                  Go Now
+                  Jetzt weiter
                 </button>
               </div>
             </div>
@@ -131,4 +131,3 @@ function LoginPage() {
 }
 
 export default LoginPage;
-

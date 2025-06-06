@@ -44,11 +44,13 @@ class RoomViewSet(viewsets.ModelViewSet):
     
     @swagger_auto_schema(
         method='post',
-        operation_description="Join a room by its 4-digit code.",
+        operation_description="Join a room by its 4-digit code. (Gäste erlaubt)",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'code': openapi.Schema(type=openapi.TYPE_INTEGER, description='4-digit room code')
+                'code': openapi.Schema(type=openapi.TYPE_INTEGER, description='4-digit room code'),
+                'guest_id': openapi.Schema(type=openapi.TYPE_STRING, description='Optional guest id'),
+                'name': openapi.Schema(type=openapi.TYPE_STRING, description='Optional guest name'),
             },
             required=['code'],
         ),
@@ -57,13 +59,13 @@ class RoomViewSet(viewsets.ModelViewSet):
             400: "Bad Request (e.g., already in a room).",
             404: "Room not found for the given code."
         },
-        security=[{'Bearer': []}]
+        security=[]  # Keine Authentifizierung nötig
     )
     @action(
-        detail=False,               # no {id} in the URL (it's not `rooms/<id>/join`)
-        methods=['post'],           # a POST action
-        permission_classes=[permissions.IsAuthenticated],
-        url_path='join'             # final path: /rooms/join/
+        detail=False,
+        methods=['post'],
+        permission_classes=[permissions.AllowAny],
+        url_path='join'
     )
     def join_by_code(self, request):
         """
@@ -71,9 +73,11 @@ class RoomViewSet(viewsets.ModelViewSet):
         POST /rooms/join/ { "code": 1234 }
         """
         code = request.data.get('code')
+        guest_id = request.data.get('guest_id')
+        name = request.data.get('name')
         if not code:
             return Response(
-                {"detail": "No code provided."}, 
+                {"detail": "No code provided."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -92,16 +96,39 @@ class RoomViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Check if user is already in some room
+        # Gast-Logik
+        if guest_id and name:
+            # Erstelle einen Dummy-User für den Gast (ohne Passwort)
+            from accounts.models import CustomUser
+            user, created = CustomUser.objects.get_or_create(
+                username=guest_id,
+                defaults={"role": CustomUser.ROLE_STUDENT, "first_name": name}
+            )
+            # Prüfe, ob der User schon in einem Raum ist
+            from .models import RoomMembership
+            if RoomMembership.objects.filter(user=user).exists():
+                return Response(
+                    {"detail": "User is already in a room."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            RoomMembership.objects.create(user=user, room=room)
+            return Response(
+                {"detail": f"Joined room {room.name} (code {room.code}).", "id": room.id},
+                status=status.HTTP_200_OK
+            )
+        # Standard-Logik für eingeloggte User
+        if not request.user or not request.user.is_authenticated:
+            return Response(
+                {"detail": "Authentication required or guest_id/name missing."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        from .models import RoomMembership
         if RoomMembership.objects.filter(user=request.user).exists():
             return Response(
-                {"detail": "User is already in a room."}, 
+                {"detail": "User is already in a room."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-        # Otherwise create membership
         RoomMembership.objects.create(user=request.user, room=room)
-    
         return Response(
             {"detail": f"Joined room {room.name} (code {room.code}).", "id": room.id},
             status=status.HTTP_200_OK

@@ -36,3 +36,6 @@ class RegisterSerializer(serializers.Serializer):
         user.set_password(password)
         user.save()
         return user
+
+class GuestStudentSerializer(serializers.Serializer):
+    name = serializers.CharField()

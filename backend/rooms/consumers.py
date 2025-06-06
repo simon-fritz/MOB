@@ -11,18 +11,34 @@ from django.contrib.auth.models import AnonymousUser
 import random
 from django.db.models import Q
 
+from asgiref.sync import sync_to_async
+from .models import RoomMembership
+
 logger = logging.getLogger(__name__)
 
 class RoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         logger.info("WebSocket-Verbindung wird hergestellt.")
         self.room_id = self.scope['url_route']['kwargs']['room_id']
-        self.user = self.scope['user'] if self.scope['user'].is_authenticated else AnonymousUser()
+        # GAST-LOGIK: guest_id im Query-String akzeptieren
+        guest_id = self.scope.get('query_string', b'').decode()
+        import urllib.parse
+        params = urllib.parse.parse_qs(guest_id)
+        guest_id_val = params.get('guest_id', [None])[0]
+        user = None
+        if guest_id_val:
+            try:
+                user = await sync_to_async(CustomUser.objects.get)(username=guest_id_val)
+            except CustomUser.DoesNotExist:
+                user = None
+        if user:
+            self.user = user
+        else:
+            self.user = self.scope['user'] if self.scope['user'].is_authenticated else AnonymousUser()
         if self.user.is_anonymous:
             await self.close()
             return
         logger.info(f"Benutzer {self.user.username} verbindet sich mit Raum {self.room_id}")
-
         self.room_group_name = f"room_{self.room_id}"
         self.user_group_name = f"user_{self.user.id}"
 
@@ -46,16 +62,26 @@ class RoomConsumer(AsyncWebsocketConsumer):
         await self.get_members()
 
     async def disconnect(self, close_code):
-        #await self.remove_room_membership()
-        #await self.get_members()  
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
-        await self.channel_layer.group_discard(
-            self.user_group_name,
-            self.channel_name
-        )
+        # Sicherstellen, dass room_group_name und user_group_name existieren und gesetzt wurden
+        room_group = getattr(self, "room_group_name", None)
+        user_group = getattr(self, "user_group_name", None)
+        if room_group:
+            await self.channel_layer.group_discard(
+                room_group,
+                self.channel_name
+            )
+        if user_group:
+            await self.channel_layer.group_discard(
+                user_group,
+                self.channel_name
+            )
+        # Wenn Gast, entferne die RoomMembership
+        guest_id = getattr(self.user, 'username', None)
+        if guest_id and guest_id.startswith('guest_'):
+            await sync_to_async(RoomMembership.objects.filter(user=self.user).delete)()
+        # Nach dem Entfernen: Memberlist an alle senden
+        if room_group:
+            await self.get_members()
 
     async def receive(self, text_data):
         logger.info(f"Nachricht empfangen: {text_data}")
@@ -139,7 +165,14 @@ class RoomConsumer(AsyncWebsocketConsumer):
         except Room.DoesNotExist:
             return []
         memberships = RoomMembership.objects.filter(room=room)
-        return [m.user.username for m in memberships]
+        # Return dict with username and first_name for each user
+        return [
+            {
+                'username': m.user.username,
+                'name': m.user.first_name if m.user.first_name else m.user.username
+            }
+            for m in memberships
+        ]
 
     @sync_to_async
     def remove_room_membership(self):

@@ -28,10 +28,15 @@ function StudentPanel({ room, user }) {
   const ws = useRef(null);
 
   useEffect(() => {
-    // TODO: BACKEND URL ins env auslagern  
-    ws.current = new WebSocket(
-      `ws://localhost:8000/ws/rooms/${room.id}/?token=${token}`
-    );
+    // WebSocket-URL je nach Gast oder Token
+    const guestId = localStorage.getItem("guestId");
+    let wsUrl;
+    if (guestId) {
+      wsUrl = `ws://localhost:8000/ws/rooms/${room.id}/?guest_id=${guestId}`;
+    } else {
+      wsUrl = `ws://localhost:8000/ws/rooms/${room.id}/?token=${token}`;
+    }
+    ws.current = new WebSocket(wsUrl);
 
     ws.current.onopen = () => {
       setSocketStatus("Connected");
@@ -100,7 +105,11 @@ function StudentPanel({ room, user }) {
         room_id: room.id,
         room_round: room.current_round,
         message: newMessage,
-        past_messages: messages.map((msg) => msg.username === "Du" ? { "role": "user", "content": msg.message } : { "role": "assistant", "content": msg.message }),
+        past_messages: messages.map((msg) =>
+          msg.username === "Du"
+            ? { role: "user", content: msg.message }
+            : { role: "assistant", content: msg.message }
+        ),
       };
       ws.current.send(JSON.stringify(payload));
 
@@ -117,10 +126,7 @@ function StudentPanel({ room, user }) {
   const handleGuess = (gueessedAI) => {
     console.log("Guess senden:", gueessedAI ? "AI" : "Human");
     console.log("Round:", room.current_round);
-    if (
-      ws.current &&
-      ws.current.readyState === WebSocket.OPEN
-    ) {
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       const payload = {
         command: "make_guess",
         guessed_ai: gueessedAI,
@@ -137,11 +143,17 @@ function StudentPanel({ room, user }) {
     }
   };
 
+  // Wenn user ein Gast ist, hole den Namen aus localStorage
+  const displayName = localStorage.getItem("studentName") || user;
+
   return (
     <Container className="mt-5">
       <Card className="shadow p-4">
         <Card.Header className="text-center">Student Panel</Card.Header>
         <Card.Body>
+          <Card.Title className="text-center">
+            Willkommen, {displayName}!
+          </Card.Title>
           <Card.Title className="text-center">Room Details</Card.Title>
           <Card.Text>
             <strong>Room ID:</strong> {room.id}
@@ -153,22 +165,25 @@ function StudentPanel({ room, user }) {
             <strong>Room Code:</strong> {room.code}
           </Card.Text>
           <Card.Text>
-            <strong>Round</strong>{room.current_round}
+            <strong>Round</strong>
+            {room.current_round}
           </Card.Text>
           <p>Status der WebSocket-Verbindung: {socketStatus}</p>
           <Timer timerString={timerString} />
         </Card.Body>
       </Card>
 
-
-
       {roundStatus === RoundStatus.PAUSED && <RoomMembers members={members} />}
-      {roundStatus === RoundStatus.STARTED &&
-        (<Card className="shadow p-4 mt-4">
+      {roundStatus === RoundStatus.STARTED && (
+        <Card className="shadow p-4 mt-4">
           <Card.Header className="text-center">Privater Chat</Card.Header>
           <Card.Body>
             <div className="private-chat">
-              <h5>{hasTurn ? "Du schreibst die nächste Nachricht" : "Dein Gegenüber schreibt die nächste Nachricht"}</h5>
+              <h5>
+                {hasTurn
+                  ? "Du schreibst die nächste Nachricht"
+                  : "Dein Gegenüber schreibt die nächste Nachricht"}
+              </h5>
               <div
                 className="chat-window"
                 style={{
@@ -187,45 +202,45 @@ function StudentPanel({ room, user }) {
                 ))}
               </div>
               <div className="chat-input mt-2" style={{ display: "flex" }}>
-                {
-                  hasTurn ?
-                    (
-                      <><input
-                        type="text"
-                        className="form-control"
-                        placeholder="Nachricht eingeben..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyDown={handleKeyPress}
-                      />
-                        <button
-                          className="btn btn-primary ml-2"
-                          onClick={handleSend}
-                          style={{ marginLeft: "10px" }}
-                        >
-                          Senden
-                        </button></>)
-                    :
-                    (<></>)
-                }
+                {hasTurn ? (
+                  <>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Nachricht eingeben..."
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyDown={handleKeyPress}
+                    />
+                    <button
+                      className="btn btn-primary ml-2"
+                      onClick={handleSend}
+                      style={{ marginLeft: "10px" }}
+                    >
+                      Senden
+                    </button>
+                  </>
+                ) : (
+                  <></>
+                )}
               </div>
             </div>
           </Card.Body>
-        </Card>)
-      }
-      {roundStatus == RoundStatus.GUESS_PHASE &&
+        </Card>
+      )}
+      {roundStatus == RoundStatus.GUESS_PHASE && (
         <Card className="shadow p-4 mt-4">
           <Card.Header className="text-center">Guess</Card.Header>
           <button onClick={() => handleGuess(false)}>Guess human</button>
           <button onClick={() => handleGuess(true)}>Guess AI</button>
         </Card>
-      }
-      {roundStatus == RoundStatus.RESULT &&
+      )}
+      {roundStatus == RoundStatus.RESULT && (
         <Card className="shadow p-4 mt-4">
           <Card.Header className="text-center">Result</Card.Header>
           <p>{guessResult}</p>
         </Card>
-      }
+      )}
     </Container>
   );
 }

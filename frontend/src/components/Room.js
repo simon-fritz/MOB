@@ -31,6 +31,14 @@ function Room() {
   }, [roomId]);
 
   useEffect(() => {
+    // Prüfe, ob Gast-Login vorhanden ist
+    const guestId = localStorage.getItem("guestId");
+    const studentName = localStorage.getItem("studentName");
+    if (guestId && studentName) {
+      setIsStudent(true);
+      setUser(guestId);
+      return;
+    }
     API.get("/accounts/me/")
       .then((response) => {
         if (response.data.role === "student") {
@@ -55,7 +63,7 @@ function Room() {
   return (
     <div>
       {room && isStudent === true && <StudentPanel room={room} user={user} />}
-      {room && isStudent === false && <TeacherPanel room={room} user={user}/>}
+      {room && isStudent === false && <TeacherPanel room={room} user={user} />}
       {isStudent === null && <p>Loading...</p>}
     </div>
   );
