@@ -15,8 +15,7 @@ function Footer() {
       }}
     >
       <Container>
-        &copy; {new Date().getFullYear()} MOB Lernraum &mdash; Made with ❤️ for
-        Education
+        &copy; {new Date().getFullYear()} MOB &mdash; Made as Part of a Bachelor Thesis for Friedrich-Alexander University Erlangen-Nürnberg
       </Container>
     </footer>
   );

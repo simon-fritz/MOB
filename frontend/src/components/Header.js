@@ -1,17 +1,42 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Navbar, Container, Nav, Button } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation} from "react-router-dom";
 
 function Header() {
   const navigate = useNavigate();
-  const isTeacherLoggedIn =
-    localStorage.getItem("teacherToken") ||
-    localStorage.getItem("role") === "teacher";
+  const location = useLocation();
+  const [isTeacherLoggedIn, setIsTeacherLoggedIn] = useState(false);
+  const [isJoinedRoom, setIsJoinedRoom] = useState(false);
 
+  useEffect(() => {
+      // Check if teacher is logged in (e.g., token in localStorage)
+      const teacherToken = localStorage.getItem("accessToken");
+      if (teacherToken) {
+            setIsTeacherLoggedIn(true);
+      }
+      else {
+        setIsTeacherLoggedIn(false);
+      }
+    }, [
+      localStorage.getItem("accessToken"),
+      localStorage.getItem("refreshToken")
+    ]);
+
+  useEffect(() => {
+    // Check if current path matches /rooms/:roomId
+    const isRoom = /^\/rooms\/[^/]+$/.test(location.pathname);
+    setIsJoinedRoom(isRoom);
+  }, [location.pathname]);
+  
   const handleLogout = () => {
-    localStorage.removeItem("teacherToken");
-    localStorage.removeItem("role");
-    navigate("/login");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+  };
+
+  const leaveRoom = () => {
+    navigate("/");
+    localStorage.removeItem("guestId");
+    localStorage.removeItem("studentName");
   };
 
   return (
@@ -28,13 +53,19 @@ function Header() {
           onClick={() => navigate("/")}
           role="button"
         >
-          MOB Lernraum
+          MOB
         </Navbar.Brand>
         <Nav className="ms-auto align-items-center">
-          <Nav.Link onClick={() => navigate("/")} className="text-white">
-            Home
-          </Nav.Link>
-          {isTeacherLoggedIn ? (
+          {isJoinedRoom ? (
+            <Button
+              variant="outline-light"
+              size="sm"
+              onClick={leaveRoom}
+              className="ms-2"
+            >
+              Leave Room
+            </Button>
+          ) : isTeacherLoggedIn ? (
             <Button
               variant="outline-light"
               size="sm"

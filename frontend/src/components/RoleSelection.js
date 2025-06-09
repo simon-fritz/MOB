@@ -12,14 +12,18 @@ function RoleSelection({}) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if teacher is logged in (e.g., token or role in localStorage)
-    const teacherToken = localStorage.getItem("teacherToken");
-    const role = localStorage.getItem("role");
-    setIsTeacherLoggedIn(!!teacherToken || role === "teacher");
+    // Check if teacher is logged in (e.g., token in localStorage)
+    const teacherToken = localStorage.getItem("accessToken");
+    if (teacherToken) {
+          setIsTeacherLoggedIn(true);
+    }
+    else {
+      setIsTeacherLoggedIn(false);
+    }
   }, []);
 
   const handleTeacherLogin = () => {
-    navigate("/login"); // Adjust route if needed
+    navigate("/login");
   };
 
   const handleCreateRoom = async () => {
@@ -30,7 +34,6 @@ function RoleSelection({}) {
     }
     try {
       const response = await API.post("/api/rooms/", { name: roomName });
-      localStorage.setItem("role", "teacher");
       navigate(`/rooms/${response.data.id}`);
     } catch (error) {
       console.error("Error creating room:", error);
