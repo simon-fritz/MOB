@@ -52,18 +52,17 @@ function RoleSelection({}) {
     }
     // Gast-Login
     try {
-      const guestRes = await API.post("/accounts/guest/", {
+      const studentRes = await API.post("/accounts/student/", {
         name: studentName,
       });
-      localStorage.setItem("guestId", guestRes.data.guest_id);
-      localStorage.setItem("studentName", guestRes.data.name);
+      localStorage.setItem("studentId", studentRes.data.student_id);
+      localStorage.setItem("studentName", studentRes.data.name);
       // Dann Raumbeitritt
       const response = await API.post("/api/rooms/join/", {
         code: roomNumber,
-        guest_id: guestRes.data.guest_id,
-        name: guestRes.data.name,
+        student_id: studentRes.data.student_id,
+        name: studentRes.data.name,
       });
-      // Optional: setRole("student");
       navigate(`/rooms/${response.data.id}`);
     } catch (error) {
       alert("Beitritt fehlgeschlagen. Bitte versuche es erneut.");

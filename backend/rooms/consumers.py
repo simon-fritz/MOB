@@ -20,15 +20,15 @@ class RoomConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         logger.info("WebSocket-Verbindung wird hergestellt.")
         self.room_id = self.scope['url_route']['kwargs']['room_id']
-        # GAST-LOGIK: guest_id im Query-String akzeptieren
-        guest_id = self.scope.get('query_string', b'').decode()
+        # GAST-LOGIK: student_id im Query-String akzeptieren
+        student_id = self.scope.get('query_string', b'').decode()
         import urllib.parse
-        params = urllib.parse.parse_qs(guest_id)
-        guest_id_val = params.get('guest_id', [None])[0]
+        params = urllib.parse.parse_qs(student_id)
+        student_id_val = params.get('student_id', [None])[0]
         user = None
-        if guest_id_val:
+        if student_id_val:
             try:
-                user = await sync_to_async(CustomUser.objects.get)(username=guest_id_val)
+                user = await sync_to_async(CustomUser.objects.get)(username=student_id_val)
             except CustomUser.DoesNotExist:
                 user = None
         if user:
@@ -60,9 +60,22 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
         # Mitgliederliste senden
         await self.get_members()
+        
+    @sync_to_async
+    def remove_room_membership(self):
+        logger.info(f"Entferne Mitgliedschaft für Benutzer {self.user.username} aus Raum {self.room_id}")
+        try:
+            room = Room.objects.get(id=self.room_id)
+            RoomMembership.objects.filter(room=room, user=self.user).delete()
+            # Wenn der Benutzer ein Lehrer ist, schließe den Raum
+            if hasattr(self.user, 'role') and self.user.role == 'teacher':
+                room = Room.objects.get(id=self.room_id)
+                room.delete()
+        except Room.DoesNotExist:
+            logger.error(f"Raum mit ID {self.room_id} existiert nicht.")
+
 
     async def disconnect(self, close_code):
-        # Sicherstellen, dass room_group_name und user_group_name existieren und gesetzt wurden
         room_group = getattr(self, "room_group_name", None)
         user_group = getattr(self, "user_group_name", None)
         if room_group:
@@ -75,11 +88,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
                 user_group,
                 self.channel_name
             )
-        # Wenn Gast, entferne die RoomMembership
-        guest_id = getattr(self.user, 'username', None)
-        if guest_id and guest_id.startswith('guest_'):
-            await sync_to_async(RoomMembership.objects.filter(user=self.user).delete)()
-        # Nach dem Entfernen: Memberlist an alle senden
+        await self.remove_room_membership()
         if room_group:
             await self.get_members()
 
@@ -173,15 +182,6 @@ class RoomConsumer(AsyncWebsocketConsumer):
             }
             for m in memberships
         ]
-
-    @sync_to_async
-    def remove_room_membership(self):
-        logger.info(f"Entferne Mitgliedschaft für Benutzer {self.user.username} aus Raum {self.room_id}")
-        try:
-            room = Room.objects.get(id=self.room_id)
-            RoomMembership.objects.filter(room=room, user=self.user).delete()
-        except Room.DoesNotExist:
-            logger.error(f"Raum mit ID {self.room_id} existiert nicht.")
             
     async def match_users(self):
         room = await sync_to_async(Room.objects.get)(id=self.room_id)
@@ -268,11 +268,14 @@ class RoomConsumer(AsyncWebsocketConsumer):
         )
 
     async def send_private_message(self, data):
-        user = data['user']
+        # Use the authenticated user from the connection, not from the payload
+        user = self.user.id
         message = data['message']
         room_id = data['room_id']
         room_round = data['room_round']
         past_messages = data['past_messages']
+        
+        print("User:", user)
 
         match = await sync_to_async(Match.objects.get)(
             Q(user1=user) | Q(user2=user),
@@ -282,7 +285,6 @@ class RoomConsumer(AsyncWebsocketConsumer):
 
         if match.is_active:
             if match.user2_id is None:
-                #ai_response = "AI Response zu " + message
                 past_messages.append({"role": "user", "content": message})
                 ai_response = chat_with_ai(past_messages)
                 await self.channel_layer.group_send(

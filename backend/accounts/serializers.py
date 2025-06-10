@@ -37,5 +37,5 @@ class RegisterSerializer(serializers.Serializer):
         user.save()
         return user
 
-class GuestStudentSerializer(serializers.Serializer):
+class StudentSerializer(serializers.Serializer):
     name = serializers.CharField()

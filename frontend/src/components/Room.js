@@ -32,11 +32,11 @@ function Room() {
 
   useEffect(() => {
     // Prüfe, ob Gast-Login vorhanden ist
-    const guestId = localStorage.getItem("guestId");
+    const studentId = localStorage.getItem("studentId");
     const studentName = localStorage.getItem("studentName");
-    if (guestId && studentName) {
+    if (studentId && studentName) {
       setIsStudent(true);
-      setUser(guestId);
+      setUser(studentId);
       return;
     }
     API.get("/accounts/me/")

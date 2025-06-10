@@ -29,10 +29,10 @@ function StudentPanel({ room, user }) {
 
   useEffect(() => {
     // WebSocket-URL je nach Gast oder Token
-    const guestId = localStorage.getItem("guestId");
+    const studentId = localStorage.getItem("studentId");
     let wsUrl;
-    if (guestId) {
-      wsUrl = `ws://localhost:8000/ws/rooms/${room.id}/?guest_id=${guestId}`;
+    if (studentId) {
+      wsUrl = `ws://localhost:8000/ws/rooms/${room.id}/?student_id=${studentId}`;
     } else {
       wsUrl = `ws://localhost:8000/ws/rooms/${room.id}/?token=${token}`;
     }

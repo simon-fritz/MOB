@@ -31,6 +31,7 @@ function Header() {
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    setIsTeacherLoggedIn(false);
   };
 
   const leaveRoom = () => {

@@ -49,8 +49,8 @@ class RoomViewSet(viewsets.ModelViewSet):
             type=openapi.TYPE_OBJECT,
             properties={
                 'code': openapi.Schema(type=openapi.TYPE_INTEGER, description='4-digit room code'),
-                'guest_id': openapi.Schema(type=openapi.TYPE_STRING, description='Optional guest id'),
-                'name': openapi.Schema(type=openapi.TYPE_STRING, description='Optional guest name'),
+                'student_id': openapi.Schema(type=openapi.TYPE_STRING, description='Optional student id'),
+                'name': openapi.Schema(type=openapi.TYPE_STRING, description='Optional student name'),
             },
             required=['code'],
         ),
@@ -73,7 +73,7 @@ class RoomViewSet(viewsets.ModelViewSet):
         POST /rooms/join/ { "code": 1234 }
         """
         code = request.data.get('code')
-        guest_id = request.data.get('guest_id')
+        student_id = request.data.get('student_id')
         name = request.data.get('name')
         if not code:
             return Response(
@@ -97,15 +97,14 @@ class RoomViewSet(viewsets.ModelViewSet):
             )
 
         # Gast-Logik
-        if guest_id and name:
+        if student_id and name:
             # Erstelle einen Dummy-User für den Gast (ohne Passwort)
             from accounts.models import CustomUser
             user, created = CustomUser.objects.get_or_create(
-                username=guest_id,
+                username=student_id,
                 defaults={"role": CustomUser.ROLE_STUDENT, "first_name": name}
             )
             # Prüfe, ob der User schon in einem Raum ist
-            from .models import RoomMembership
             if RoomMembership.objects.filter(user=user).exists():
                 return Response(
                     {"detail": "User is already in a room."},
@@ -119,10 +118,9 @@ class RoomViewSet(viewsets.ModelViewSet):
         # Standard-Logik für eingeloggte User
         if not request.user or not request.user.is_authenticated:
             return Response(
-                {"detail": "Authentication required or guest_id/name missing."},
+                {"detail": "Authentication required or student_id/name missing."},
                 status=status.HTTP_401_UNAUTHORIZED
             )
-        from .models import RoomMembership
         if RoomMembership.objects.filter(user=request.user).exists():
             return Response(
                 {"detail": "User is already in a room."},
