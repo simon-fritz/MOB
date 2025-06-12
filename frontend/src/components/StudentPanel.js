@@ -88,7 +88,9 @@ function StudentPanel({ room, user }) {
     };
 
     return () => {
-      ws.current.close();
+      if (ws.current) {
+        ws.current.close();
+      }
     };
   }, [room]);
 

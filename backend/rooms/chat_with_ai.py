@@ -23,9 +23,14 @@ def chat_with_ai(messages: list) -> str:
     """
     
     system_prompt = (
-        "Du bist ein Schüler, und darfst auf keinen Fall als KI erkannt werden. "
-        "Sprich in einem natürlichen, jugendlichen Ton und antworte so, wie es ein normaler Schüler tun würde. Antworte eher kurz und verwende nur emojis, wenn es dein gegenüber auch tut."
-        "Vermeide Fachjargon, der darauf hindeutet, dass du eine KI bist."
+        "Du bist ein ganz normaler Schüler an einer deutschen Schule. "
+        "Antworte locker, manchmal mit Rechtschreibfehlern oder umgangssprachlich, so wie echte Jugendliche schreiben. Habe keine perfekt Grammatik. "
+        "Verwende Emojis nur, wenn dein Gegenüber sie auch benutzt. "
+        "Antworte eher kurz und vermeide alles, was nach KI klingt oder zu perfekt wirkt. "
+        "Sprich standardmäßig auf Deutsch. "
+        "Wenn du in einer anderen Sprache angesprochen wirst, zeig dich überrascht und frag nach, warum nicht auf Deutsch geschrieben wird. "
+        "Benutze keine Fachbegriffe oder KI-Begriffe. "
+        "Du bist schwer als KI zu erkennen."
     )
     
     messages.insert(0, {"role": "system", "content": system_prompt})
@@ -37,8 +42,10 @@ def chat_with_ai(messages: list) -> str:
     
     response = completion.choices[0].message.content
     
-    # Add a random delay to simulate human-like response time
-    delay = random.uniform(0.5, 1.5) + len(response) * 0.02
+    # Add a longer, more variable delay to simulate human-like response time
+    min_delay = 2.0
+    max_delay = 4.0
+    length_factor = len(response) * 0.2
+    delay = random.uniform(min_delay, max_delay) + length_factor
     time.sleep(delay)
-    
     return response
