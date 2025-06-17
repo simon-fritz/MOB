@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Card, Container } from "react-bootstrap";
+import "bootstrap-icons/font/bootstrap-icons.css";
+import { Card, Container, OverlayTrigger, Tooltip } from "react-bootstrap";
 import RoomMembers from "./RoomMembers";
 import Timer from "./Timer";
 
@@ -70,7 +71,11 @@ function StudentPanel({ room, user }) {
         setRoundStatus(RoundStatus.GUESS_PHASE);
       }
       if (data.type === "make_guess") {
-        setGuessResult(data.is_correct ? "Richtig" : "Falsch");
+        setGuessResult(
+          data.is_correct
+            ? "Du hast richtig geraten."
+            : "Du hast falsch geraten."
+        );
         setRoundStatus(RoundStatus.RESULT);
       }
       if (data.type === "conversation_start") {
@@ -149,39 +154,125 @@ function StudentPanel({ room, user }) {
   const displayName = localStorage.getItem("studentName") || user;
 
   return (
-    <Container className="mt-5">
-      <Card className="shadow p-4">
-        <Card.Header className="text-center">Student Panel</Card.Header>
-        <Card.Body>
-          <Card.Title className="text-center">
-            Willkommen, {displayName}!
-          </Card.Title>
-          <Card.Title className="text-center">Room Details</Card.Title>
-          <Card.Text>
-            <strong>Room ID:</strong> {room.id}
-          </Card.Text>
-          <Card.Text>
-            <strong>Room Name:</strong> {room.name}
-          </Card.Text>
-          <Card.Text>
-            <strong>Room Code:</strong> {room.code}
-          </Card.Text>
-          <Card.Text>
-            <strong>Round</strong>
-            {room.current_round}
-          </Card.Text>
-          <p>Status der WebSocket-Verbindung: {socketStatus}</p>
-          <Timer timerString={timerString} />
+    <Container className="mt-5 d-flex flex-column align-items-center">
+      <Card
+        className="shadow-lg p-4"
+        style={{
+          maxWidth: 800,
+          width: "100%",
+          borderRadius: 20,
+          background: "linear-gradient(135deg, #f8fafc 60%, #e0e7ff 100%)",
+        }}
+      >
+        <Card.Header
+          className="text-center bg-primary text-white"
+          style={{
+            borderRadius: 15,
+            fontSize: 28,
+            fontWeight: 600,
+            letterSpacing: 1,
+          }}
+        >
+          <span role="img" aria-label="student">
+            🎓
+          </span>{" "}
+          {room.name}
+        </Card.Header>
+        <Card.Body style={{ position: "relative" }}>
+          <div className="mb-4 d-flex justify-content-center align-items-center gap-4">
+            <div className="d-flex align-items-center">
+              <strong className="me-2" style={{ fontSize: 22 }}>
+                Raumcode:
+              </strong>
+              <span
+                className="badge bg-secondary"
+                style={{
+                  fontSize: 22,
+                  letterSpacing: 1,
+                  padding: "10px 18px",
+                }}
+              >
+                {room.code}
+              </span>
+            </div>
+            <div className="d-flex align-items-center">
+              <strong className="me-2" style={{ fontSize: 22 }}>
+                Runde:
+              </strong>
+              <span className="badge bg-secondary" style={{ fontSize: 22 }}>
+                {room.current_round}
+              </span>
+            </div>
+          </div>
+          <div className="mb-3 text-center">
+            <div
+              style={{
+                fontSize: 48,
+                fontWeight: 700,
+                marginBottom: 8,
+              }}
+            >
+              <Timer timerString={timerString} />
+            </div>
+          </div>
+          <OverlayTrigger
+            placement="bottom"
+            overlay={
+              <Tooltip id="websocket-status-tooltip">
+                WebSocket-Verbindung:{" "}
+                {socketStatus === "Connected" ? "Verbunden" : "Nicht verbunden"}
+              </Tooltip>
+            }
+          >
+            <span
+              style={{
+                position: "absolute",
+                top: 20,
+                right: 30,
+                cursor: "pointer",
+              }}
+            >
+              <i
+                className={`bi ${
+                  socketStatus === "Connected" ? "bi-wifi" : "bi-wifi-off"
+                }`}
+                style={{
+                  color: socketStatus === "Connected" ? "#198754" : "#dc3545",
+                  fontSize: 22,
+                }}
+              ></i>
+            </span>
+          </OverlayTrigger>
         </Card.Body>
       </Card>
-
-      {roundStatus === RoundStatus.PAUSED && <RoomMembers members={members} />}
+      {roundStatus === RoundStatus.PAUSED && (
+        <div style={{ width: "100%", maxWidth: 800 }}>
+          <RoomMembers members={members} />
+        </div>
+      )}
       {roundStatus === RoundStatus.STARTED && (
-        <Card className="shadow p-4 mt-4">
-          <Card.Header className="text-center">Privater Chat</Card.Header>
+        <Card
+          className="shadow p-4 mt-4"
+          style={{ maxWidth: 800, width: "100%", borderRadius: 20 }}
+        >
+          <Card.Header
+            className="text-center bg-info text-white"
+            style={{
+              borderRadius: 15,
+              fontSize: 22,
+              fontWeight: 500,
+            }}
+          >
+            Chat
+          </Card.Header>
           <Card.Body>
             <div className="private-chat">
-              <h5>
+              <h5
+                style={{
+                  fontWeight: 500,
+                  marginBottom: 16,
+                }}
+              >
                 {hasTurn
                   ? "Du schreibst die nächste Nachricht"
                   : "Dein Gegenüber schreibt die nächste Nachricht"}
@@ -194,6 +285,8 @@ function StudentPanel({ room, user }) {
                   overflowY: "auto",
                   padding: "10px",
                   backgroundColor: "#f9f9f9",
+                  borderRadius: 10,
+                  marginBottom: 12,
                 }}
               >
                 {messages.map((msg, index) => (
@@ -213,34 +306,88 @@ function StudentPanel({ room, user }) {
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyDown={handleKeyPress}
+                      style={{ borderRadius: 8, fontSize: 18 }}
                     />
                     <button
                       className="btn btn-primary ml-2"
                       onClick={handleSend}
-                      style={{ marginLeft: "10px" }}
+                      style={{
+                        marginLeft: "10px",
+                        fontWeight: 500,
+                        fontSize: 18,
+                        borderRadius: 8,
+                      }}
                     >
                       Senden
                     </button>
                   </>
-                ) : (
-                  <></>
-                )}
+                ) : null}
               </div>
             </div>
           </Card.Body>
         </Card>
       )}
-      {roundStatus == RoundStatus.GUESS_PHASE && (
-        <Card className="shadow p-4 mt-4">
-          <Card.Header className="text-center">Guess</Card.Header>
-          <button onClick={() => handleGuess(false)}>Guess human</button>
-          <button onClick={() => handleGuess(true)}>Guess AI</button>
+      {roundStatus === RoundStatus.GUESS_PHASE && (
+        <Card
+          className="shadow p-4 mt-4"
+          style={{ maxWidth: 800, width: "100%", borderRadius: 20 }}
+        >
+          <Card.Header
+            className="text-center bg-warning text-dark"
+            style={{
+              borderRadius: 15,
+              fontSize: 22,
+              fontWeight: 500,
+            }}
+          >
+            Mit was hast du gesprochen?
+          </Card.Header>
+          <Card.Body className="d-flex flex-column align-items-center">
+            <button
+              onClick={() => handleGuess(false)}
+              className="btn btn-outline-primary mb-2"
+              style={{
+                fontWeight: 500,
+                fontSize: 18,
+                width: 200,
+                borderRadius: 8,
+              }}
+            >
+              Das war ein Mensch.
+            </button>
+            <button
+              onClick={() => handleGuess(true)}
+              className="btn btn-outline-success"
+              style={{
+                fontWeight: 500,
+                fontSize: 18,
+                width: 200,
+                borderRadius: 8,
+              }}
+            >
+              Das war eine KI.
+            </button>
+          </Card.Body>
         </Card>
       )}
-      {roundStatus == RoundStatus.RESULT && (
-        <Card className="shadow p-4 mt-4">
-          <Card.Header className="text-center">Result</Card.Header>
-          <p>{guessResult}</p>
+      {roundStatus === RoundStatus.RESULT && (
+        <Card
+          className="shadow p-4 mt-4"
+          style={{ maxWidth: 800, width: "100%", borderRadius: 20 }}
+        >
+          <Card.Header
+            className="text-center bg-success text-white"
+            style={{
+              borderRadius: 15,
+              fontSize: 22,
+              fontWeight: 500,
+            }}
+          >
+            Ergebnis
+          </Card.Header>
+          <Card.Body className="d-flex flex-column align-items-center">
+            <p style={{ fontSize: 24, fontWeight: 600 }}>{guessResult}</p>
+          </Card.Body>
         </Card>
       )}
     </Container>
