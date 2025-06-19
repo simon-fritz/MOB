@@ -375,7 +375,10 @@ function StudentPanel({ room, user }) {
           style={{ maxWidth: 800, width: "100%", borderRadius: 20 }}
         >
           <Card.Header
-            className="text-center bg-success text-white"
+            className={
+              "text-center text-white" +
+              (guessResult.includes("falsch") ? " bg-danger" : " bg-success")
+            }
             style={{
               borderRadius: 15,
               fontSize: 22,
