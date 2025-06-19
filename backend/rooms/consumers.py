@@ -268,42 +268,51 @@ class RoomConsumer(AsyncWebsocketConsumer):
         )
 
     async def send_private_message(self, data):
-        # Use the authenticated user from the connection, not from the payload
-        user = self.user.id
-        message = data['message']
-        room_id = data['room_id']
-        room_round = data['room_round']
-        past_messages = data['past_messages']
-        
-        print("User:", user)
+        try:
+            user = self.user.id
+            message = data['message']
+            room_id = data['room_id']
+            room_round = data['room_round']
+            past_messages = data['past_messages']
+            logger.info(f"send_private_message: user={user}, room_id={room_id}, round={room_round}, message={message}")
 
-        match = await sync_to_async(Match.objects.get)(
-            Q(user1=user) | Q(user2=user),
-            room=room_id,
-            round=room_round
+            match = await sync_to_async(Match.objects.get)(
+                Q(user1=user) | Q(user2=user),
+                room=room_id,
+                round=room_round
+            )
+
+            if match.is_active:
+                if match.user2_id is None:
+                    past_messages.append({"role": "user", "content": message})
+                    asyncio.create_task(self.send_ai_response_with_delay(user, past_messages))
+                else:
+                    receiver = match.user1_id if match.user2_id == user else match.user2_id
+                    await self.channel_layer.group_send(
+                        f"user_{receiver}",
+                        {
+                            'type': 'private_message',
+                            'message': message,
+                        }
+                    )
+        except Exception as e:
+            logger.error(f"Fehler in send_private_message: {e}")
+            await self.send(text_data=json.dumps({
+                "type": "error",
+                "message": f"Fehler beim Senden der privaten Nachricht: {str(e)}"
+            }))
+
+    async def send_ai_response_with_delay(self, user, past_messages):
+        from .chat_with_ai import chat_with_ai
+        response = await chat_with_ai(past_messages)
+        await self.channel_layer.group_send(
+            f"user_{user}",
+            {
+                'type': 'private_message',
+                'message': response,
+            }
         )
 
-        if match.is_active:
-            if match.user2_id is None:
-                past_messages.append({"role": "user", "content": message})
-                ai_response = chat_with_ai(past_messages)
-                await self.channel_layer.group_send(
-                    f"user_{user}",
-                    {
-                        'type': 'private_message',
-                        'message': ai_response,
-                    }
-                )
-            else:
-                receiver = match.user1_id if match.user2_id == user else match.user2_id
-                await self.channel_layer.group_send(
-                    f"user_{receiver}",
-                    {
-                        'type': 'private_message',
-                        'message': message,
-                    }
-                )
-                
     async def make_guess(self, data):
         guessed_ai = data.get('guessed_ai') 
         room_round = data.get('room_round')

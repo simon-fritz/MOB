@@ -1,8 +1,10 @@
 import os
 import random
 import time
+import asyncio
 from openai import OpenAI
 from dotenv import load_dotenv
+from asgiref.sync import sync_to_async
 
 # Laden der Umgebungsvariablen
 load_dotenv()
@@ -10,7 +12,7 @@ api_key = os.getenv("OPENAI_API_KEY")
 
 client = OpenAI(api_key=api_key)
 
-def chat_with_ai(messages: list) -> str:
+async def chat_with_ai(messages: list) -> str:
     """
     Sendet eine Chat-Anfrage an die KI unter Berücksichtigung einer bestehenden Nachrichtenhistorie.
     
@@ -33,9 +35,9 @@ def chat_with_ai(messages: list) -> str:
         "Du bist schwer als KI zu erkennen."
     )
     
-    messages.insert(0, {"role": "system", "content": system_prompt})
+    messages = [{"role": "system", "content": system_prompt}] + messages
     
-    completion = client.chat.completions.create(
+    completion = await sync_to_async(client.chat.completions.create, thread_sensitive=False)(
         model="gpt-4o-mini",
         messages=messages
     )
@@ -47,5 +49,5 @@ def chat_with_ai(messages: list) -> str:
     max_delay = 4.0
     length_factor = len(response) * 0.2
     delay = random.uniform(min_delay, max_delay) + length_factor
-    time.sleep(delay)
+    await asyncio.sleep(delay)
     return response

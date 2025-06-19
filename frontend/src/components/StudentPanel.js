@@ -100,7 +100,6 @@ function StudentPanel({ room, user }) {
   }, [room]);
 
   const handleSend = () => {
-    console.log("Nachricht senden:", newMessage);
     if (
       ws.current &&
       ws.current.readyState === WebSocket.OPEN &&
