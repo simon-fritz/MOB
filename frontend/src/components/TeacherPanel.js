@@ -1,15 +1,10 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import {
-  Card,
-  Container,
-  Alert,
-  OverlayTrigger,
-  Tooltip,
-} from "react-bootstrap";
+import { Card, Container, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
 import RoomMembers from "./RoomMembers";
 import Timer from "./Timer";
+import API from "./api";
 
 function TeacherPanel({ room }) {
   const [members, setMembers] = useState([]);
@@ -17,6 +12,7 @@ function TeacherPanel({ room }) {
   const [socket, setSocket] = useState(null);
   const [timerString, setTimerString] = useState("");
   const [showSocketAlert, setShowSocketAlert] = useState(false);
+  const [guessStats, setGuessStats] = useState(null);
 
   let roundPaused = timerString === "" || parseInt(timerString, 10) === 0;
 
@@ -41,6 +37,8 @@ function TeacherPanel({ room }) {
       }
       if (data.type === "round_started") {
         room.current_round = parseInt(data.current_round, 10);
+        // Statistiken nach neuer Runde neu laden
+        if (TeacherPanel.fetchStats) TeacherPanel.fetchStats();
       }
     };
 
@@ -58,6 +56,18 @@ function TeacherPanel({ room }) {
     return () => {
       socket.close();
     };
+  }, [room]);
+
+  useEffect(() => {
+    // Guess-Statistiken laden
+    const fetchStats = () => {
+      API.get(`/api/rooms/${room.id}/guesses/summary/`)
+        .then((res) => setGuessStats(res.data))
+        .catch(() => setGuessStats(null));
+    };
+    fetchStats();
+    // Speichere Funktion für späteren Button
+    TeacherPanel.fetchStats = fetchStats;
   }, [room]);
 
   const handleMatchUsers = () => {
@@ -86,7 +96,7 @@ function TeacherPanel({ room }) {
             letterSpacing: 1,
           }}
         >
-          <span role="img" aria-label="room">
+          <span role="img" aria-label="student">
             🏫
           </span>{" "}
           {room.name}
@@ -158,30 +168,92 @@ function TeacherPanel({ room }) {
               ></i>
             </span>
           </OverlayTrigger>
+          {showSocketAlert && (
+            <Alert
+              variant="danger"
+              className="mt-3 shadow"
+              dismissible
+              onClose={() => setShowSocketAlert(false)}
+              style={{ maxWidth: 500 }}
+            >
+              <Alert.Heading>Verbindungsfehler</Alert.Heading>
+              <p>
+                Die Verbindung zum Server ist fehlgeschlagen. Bitte erstelle einen
+                neuen Raum.
+              </p>
+              <button
+                className="btn btn-outline-danger"
+                onClick={() => (window.location.href = "/")}
+              >
+                Raum verlassen
+              </button>
+            </Alert>
+          )}
+          {/* Guess-Statistik anzeigen */}
+          {guessStats && (
+            <div className="shadow p-3 mt-4" style={{ maxWidth: 800, width: "100%", borderRadius: 20, background: '#f8fafc' }}>
+              <div className="bg-info text-white text-center" style={{ borderRadius: 15, fontSize: 20, fontWeight: 500, padding: 10 }}>
+                Auswertung der Schätzungen
+              </div>
+                        <button
+            className="btn btn-outline-info mb-2 mt-3"
+            onClick={() => TeacherPanel.fetchStats && TeacherPanel.fetchStats()}
+            style={{ maxWidth: 300 }}
+          >
+            Ergebnisse aktualisieren
+          </button>
+
+              <div className="mb-3">
+                <strong>Alle Runden:</strong>
+                <div className="d-flex gap-4 mt-2">
+                  <div>
+                    <span className="badge bg-success" style={{ fontSize: 18 }}>Richtig: {guessStats.correct}</span>
+                  </div>
+                  <div>
+                    <span className="badge bg-danger" style={{ fontSize: 18 }}>Falsch: {guessStats.wrong}</span>
+                  </div>
+                  <div>
+                    <span className="badge bg-primary" style={{ fontSize: 18 }}>&quot;KI&quot; getippt: {guessStats.ai}</span>
+                  </div>
+                  <div>
+                    <span className="badge bg-secondary" style={{ fontSize: 18 }}>&quot;Mensch&quot; getippt: {guessStats.human}</span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <strong>Pro Runde:</strong>
+                <table className="table table-bordered mt-2">
+                  <thead>
+                    <tr>
+                      <th>Runde</th>
+                      <th>Richtig</th>
+                      <th>Falsch</th>
+                      <th>&quot;KI&quot; getippt</th>
+                      <th>&quot;Mensch&quot; getippt</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {guessStats.per_round.map((r) => (
+                      <tr key={r.round}>
+                        <td>{r.round}</td>
+                        <td style={{ color: "#198754", fontWeight: 600 }}>{r.correct}</td>
+                        <td style={{ color: "#dc3545", fontWeight: 600 }}>{r.wrong}</td>
+                        <td>{r.ai}</td>
+                        <td>{r.human}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          {room.id && (
+            <div style={{ width: "100%", maxWidth: 800 }}>
+              <RoomMembers members={members} />
+            </div>
+          )}
         </Card.Body>
       </Card>
-      {showSocketAlert && (
-        <Alert
-          variant="danger"
-          className="mt-3 shadow"
-          dismissible
-          onClose={() => setShowSocketAlert(false)}
-          style={{ maxWidth: 500 }}
-        >
-          <Alert.Heading>Verbindungsfehler</Alert.Heading>
-          <p>
-            Die Verbindung zum Server ist fehlgeschlagen. Bitte erstelle einen
-            neuen Raum.
-          </p>
-          <button
-            className="btn btn-outline-danger"
-            onClick={() => (window.location.href = "/")}
-          >
-            Raum verlassen
-          </button>
-        </Alert>
-      )}
-      {room.id && <RoomMembers members={members} />}
     </Container>
   );
 }

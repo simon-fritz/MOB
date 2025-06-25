@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { Card, Container, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Card, Container, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
 import RoomMembers from "./RoomMembers";
 import Timer from "./Timer";
 
@@ -14,6 +14,8 @@ function StudentPanel({ room, user }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
 
+  const [showSocketAlert, setShowSocketAlert] = useState(false);
+
   const RoundStatus = {
     PAUSED: "paused",
     STARTED: "started",
@@ -25,6 +27,8 @@ function StudentPanel({ room, user }) {
   const [hasTurn, setHasTurn] = useState(false);
 
   const [guessResult, setGuessResult] = useState("");
+
+  const [guessHistory, setGuessHistory] = useState([]);
 
   const ws = useRef(null);
 
@@ -41,6 +45,7 @@ function StudentPanel({ room, user }) {
 
     ws.current.onopen = () => {
       setSocketStatus("Connected");
+      setShowSocketAlert(false);
     };
 
     ws.current.onmessage = (event) => {
@@ -77,6 +82,17 @@ function StudentPanel({ room, user }) {
             : "Du hast falsch geraten."
         );
         setRoundStatus(RoundStatus.RESULT);
+        // Guess zur History hinzufügen
+        setGuessHistory((prev) => [
+          {
+            id: Date.now(),
+            round: room.current_round,
+            guessed_ai: ws.current._lastGuess,
+            is_correct: data.is_correct,
+            created_at: new Date().toISOString(),
+          },
+          ...prev.slice(0, 19),
+        ]);
       }
       if (data.type === "conversation_start") {
         setHasTurn(data.starter);
@@ -85,17 +101,20 @@ function StudentPanel({ room, user }) {
 
     ws.current.onclose = () => {
       setSocketStatus("Disconnected");
+      setShowSocketAlert(true);
       ws.current = null;
     };
 
     ws.current.onerror = (error) => {
       console.error("WebSocket Fehler:", error);
+      setShowSocketAlert(true);
     };
 
     return () => {
       if (ws.current) {
         ws.current.close();
       }
+      setGuessHistory([]); // Clear Guess-Historie beim Raum verlassen
     };
   }, [room]);
 
@@ -139,6 +158,8 @@ function StudentPanel({ room, user }) {
         room_round: room.current_round,
       };
       ws.current.send(JSON.stringify(payload));
+      // speichere den letzten Guess im State für make_guess
+      ws.current._lastGuess = gueessedAI;
     }
     setRoundStatus(RoundStatus.PAUSED);
   };
@@ -242,156 +263,222 @@ function StudentPanel({ room, user }) {
               ></i>
             </span>
           </OverlayTrigger>
-        </Card.Body>
-      </Card>
-      {roundStatus === RoundStatus.PAUSED && (
-        <div style={{ width: "100%", maxWidth: 800 }}>
-          <RoomMembers members={members} />
-        </div>
-      )}
-      {roundStatus === RoundStatus.STARTED && (
-        <Card
-          className="shadow p-4 mt-4"
-          style={{ maxWidth: 800, width: "100%", borderRadius: 20 }}
-        >
-          <Card.Header
-            className="text-center bg-info text-white"
-            style={{
-              borderRadius: 15,
-              fontSize: 22,
-              fontWeight: 500,
-            }}
-          >
-            Chat
-          </Card.Header>
-          <Card.Body>
-            <div className="private-chat">
-              <h5
+
+          {roundStatus === RoundStatus.STARTED && (
+            <div className="shadow p-4 mt-4" style={{ borderRadius: 20 }}>
+              <div
+                className="text-center bg-info text-white"
                 style={{
+                  borderRadius: 15,
+                  fontSize: 22,
                   fontWeight: 500,
                   marginBottom: 16,
+                  padding: 8,
                 }}
               >
-                {hasTurn
-                  ? "Du schreibst die nächste Nachricht"
-                  : "Dein Gegenüber schreibt die nächste Nachricht"}
-              </h5>
-              <div
-                className="chat-window"
-                style={{
-                  border: "1px solid #ccc",
-                  height: "300px",
-                  overflowY: "auto",
-                  padding: "10px",
-                  backgroundColor: "#f9f9f9",
-                  borderRadius: 10,
-                  marginBottom: 12,
-                }}
-              >
-                {messages.map((msg, index) => (
-                  <div key={index} style={{ marginBottom: "8px" }}>
-                    <strong>{msg.username}: </strong>
-                    <span>{msg.message}</span>
-                  </div>
-                ))}
+                Chat
               </div>
-              <div className="chat-input mt-2" style={{ display: "flex" }}>
-                {hasTurn ? (
-                  <>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Nachricht eingeben..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyDown={handleKeyPress}
-                      style={{ borderRadius: 8, fontSize: 18 }}
-                    />
-                    <button
-                      className="btn btn-primary ml-2"
-                      onClick={handleSend}
-                      style={{
-                        marginLeft: "10px",
-                        fontWeight: 500,
-                        fontSize: 18,
-                        borderRadius: 8,
-                      }}
-                    >
-                      Senden
-                    </button>
-                  </>
-                ) : null}
+              <div className="private-chat">
+                <h5
+                  style={{
+                    fontWeight: 500,
+                    marginBottom: 16,
+                  }}
+                >
+                  {hasTurn
+                    ? "Du schreibst die nächste Nachricht"
+                    : "Dein Gegenüber schreibt die nächste Nachricht"}
+                </h5>
+                <div
+                  className="chat-window"
+                  style={{
+                    border: "1px solid #ccc",
+                    height: "300px",
+                    overflowY: "auto",
+                    padding: "10px",
+                    backgroundColor: "#f9f9f9",
+                    borderRadius: 10,
+                    marginBottom: 12,
+                  }}
+                >
+                  {messages.map((msg, index) => (
+                    <div key={index} style={{ marginBottom: "8px" }}>
+                      <strong>{msg.username}: </strong>
+                      <span>{msg.message}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="chat-input mt-2" style={{ display: "flex" }}>
+                  {hasTurn ? (
+                    <>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Nachricht eingeben..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyDown={handleKeyPress}
+                        style={{ borderRadius: 8, fontSize: 18 }}
+                      />
+                      <button
+                        className="btn btn-primary ml-2"
+                        onClick={handleSend}
+                        style={{
+                          marginLeft: "10px",
+                          fontWeight: 500,
+                          fontSize: 18,
+                          borderRadius: 8,
+                        }}
+                      >
+                        Senden
+                      </button>
+                    </>
+                  ) : null}
+                </div>
               </div>
             </div>
-          </Card.Body>
-        </Card>
-      )}
-      {roundStatus === RoundStatus.GUESS_PHASE && (
-        <Card
-          className="shadow p-4 mt-4"
-          style={{ maxWidth: 800, width: "100%", borderRadius: 20 }}
-        >
-          <Card.Header
-            className="text-center bg-warning text-dark"
-            style={{
-              borderRadius: 15,
-              fontSize: 22,
-              fontWeight: 500,
-            }}
-          >
-            Mit was hast du gesprochen?
-          </Card.Header>
-          <Card.Body className="d-flex flex-column align-items-center">
-            <button
-              onClick={() => handleGuess(false)}
-              className="btn btn-outline-primary mb-2"
-              style={{
-                fontWeight: 500,
-                fontSize: 18,
-                width: 200,
-                borderRadius: 8,
-              }}
+          )}
+
+          {/* Guess-Historie anzeigen */}
+          {guessHistory.length > 0 && (
+            <div className="shadow p-3 mt-4" style={{ borderRadius: 20 }}>
+              <div
+                className="bg-secondary text-white text-center"
+                style={{
+                  borderRadius: 15,
+                  fontSize: 20,
+                  fontWeight: 500,
+                  marginBottom: 12,
+                  padding: 8,
+                }}
+              >
+                Deine letzten Runden
+              </div>
+              <div>
+                <table className="table table-bordered mb-0">
+                  <thead>
+                    <tr>
+                      <th>Runde</th>
+                      <th>Dein Tipp</th>
+                      <th>Ergebnis</th>
+                      <th>Zeitpunkt</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {guessHistory.map((g) => (
+                      <tr key={g.id}>
+                        <td>{g.round}</td>
+                        <td>{g.guessed_ai ? "KI" : "Mensch"}</td>
+                        <td
+                          style={{
+                            color: g.is_correct ? "#198754" : "#dc3545",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {g.is_correct ? "Richtig" : "Falsch"}
+                        </td>
+                        <td>
+                          {g.created_at
+                            ? new Date(g.created_at).toLocaleString()
+                            : ""}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {roundStatus === RoundStatus.GUESS_PHASE && (
+            <div className="shadow p-4 mt-4" style={{ borderRadius: 20 }}>
+              <div
+                className="text-center bg-warning text-dark"
+                style={{
+                  borderRadius: 15,
+                  fontSize: 22,
+                  fontWeight: 500,
+                  marginBottom: 16,
+                  padding: 8,
+                }}
+              >
+                Mit was hast du gesprochen?
+              </div>
+              <div className="d-flex flex-column align-items-center">
+                <button
+                  onClick={() => handleGuess(false)}
+                  className="btn btn-outline-primary mb-2"
+                  style={{
+                    fontWeight: 500,
+                    fontSize: 18,
+                    width: 200,
+                    borderRadius: 8,
+                  }}
+                >
+                  Das war ein Mensch.
+                </button>
+                <button
+                  onClick={() => handleGuess(true)}
+                  className="btn btn-outline-success"
+                  style={{
+                    fontWeight: 500,
+                    fontSize: 18,
+                    width: 200,
+                    borderRadius: 8,
+                  }}
+                >
+                  Das war eine KI.
+                </button>
+              </div>
+            </div>
+          )}
+
+          {roundStatus === RoundStatus.RESULT && (
+            <div className="shadow p-4 mt-4" style={{ borderRadius: 20 }}>
+              <div
+                className={
+                  "text-center text-white" +
+                  (guessResult.includes("falsch") ? " bg-danger" : " bg-success")
+                }
+                style={{
+                  borderRadius: 15,
+                  fontSize: 22,
+                  fontWeight: 500,
+                  marginBottom: 16,
+                  padding: 8,
+                }}
+              >
+                Ergebnis
+              </div>
+              <div className="d-flex flex-column align-items-center">
+                <p style={{ fontSize: 24, fontWeight: 600 }}>{guessResult}</p>
+              </div>
+            </div>
+          )}
+
+          {showSocketAlert && (
+            <Alert
+              variant="danger"
+              className="mt-3 shadow"
+              dismissible
+              onClose={() => setShowSocketAlert(false)}
+              style={{ maxWidth: 500 }}
             >
-              Das war ein Mensch.
-            </button>
-            <button
-              onClick={() => handleGuess(true)}
-              className="btn btn-outline-success"
-              style={{
-                fontWeight: 500,
-                fontSize: 18,
-                width: 200,
-                borderRadius: 8,
-              }}
-            >
-              Das war eine KI.
-            </button>
-          </Card.Body>
-        </Card>
-      )}
-      {roundStatus === RoundStatus.RESULT && (
-        <Card
-          className="shadow p-4 mt-4"
-          style={{ maxWidth: 800, width: "100%", borderRadius: 20 }}
-        >
-          <Card.Header
-            className={
-              "text-center text-white" +
-              (guessResult.includes("falsch") ? " bg-danger" : " bg-success")
-            }
-            style={{
-              borderRadius: 15,
-              fontSize: 22,
-              fontWeight: 500,
-            }}
-          >
-            Ergebnis
-          </Card.Header>
-          <Card.Body className="d-flex flex-column align-items-center">
-            <p style={{ fontSize: 24, fontWeight: 600 }}>{guessResult}</p>
-          </Card.Body>
-        </Card>
-      )}
+              <Alert.Heading>Verbindungsfehler</Alert.Heading>
+              <p>
+                Die Verbindung zum Server ist fehlgeschlagen. Bitte erstelle einen
+                neuen Raum.
+              </p>
+              <button
+                className="btn btn-outline-danger"
+                onClick={() => (window.location.href = "/")}
+              >
+                Raum verlassen
+              </button>
+            </Alert>
+          )}
+        </Card.Body>
+      </Card>
     </Container>
   );
 }

@@ -61,7 +61,7 @@ class Match(models.Model):
         unique_together = (('user1', 'user2', 'room', 'round'),)
         
 class Guess(models.Model):
-    room = models.ForeignKey('Room', on_delete=models.CASCADE)
+    room = models.ForeignKey('Room', on_delete=models.SET_NULL, null=True, blank=True)
     round = models.IntegerField()
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
@@ -73,4 +73,4 @@ class Guess(models.Model):
 
     def __str__(self):
         result = "richtig" if self.is_correct else "falsch"
-        return f"Guess by {self.user.username} in room {self.room.id} round {self.round}: {result}"
+        return f"Guess by {self.user.username} in room {self.room.id if self.room else 'None'} round {self.round}: {result}"

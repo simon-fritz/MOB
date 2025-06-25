@@ -1,16 +1,15 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
-from .models import Room, RoomMembership
+from .models import Room, RoomMembership, Guess
 from .serializers import RoomSerializer, RoomMembershipSerializer
+from django.db.models import Count, Q
 from rest_framework.decorators import action
+from rest_framework.views import APIView
 
 
 # For Swagger doc
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
 
 class RoomViewSet(viewsets.ModelViewSet):
     queryset = Room.objects.all()
@@ -292,3 +291,35 @@ class RoomMembershipViewSet(viewsets.ModelViewSet):
         room.save()
 
         return Response({"detail": "Round incremented."}, status=status.HTTP_200_OK)
+
+class RoomGuessSummaryView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request, room_id):
+        # Pro Runde: wie viele richtig/falsch, wie viele AI/Human getippt
+        all_guesses = Guess.objects.filter(room_id=room_id)
+        # Gesamtstatistik
+        total = all_guesses.count()
+        correct = all_guesses.filter(is_correct=True).count()
+        wrong = all_guesses.filter(is_correct=False).count()
+        ai = all_guesses.filter(guessed_ai=True).count()
+        human = all_guesses.filter(guessed_ai=False).count()
+        # Pro Runde
+        per_round = list(
+            all_guesses.values('round')
+            .annotate(
+                total=Count('id'),
+                correct=Count('id', filter=Q(is_correct=True)),
+                wrong=Count('id', filter=Q(is_correct=False)),
+                ai=Count('id', filter=Q(guessed_ai=True)),
+                human=Count('id', filter=Q(guessed_ai=False)),
+            )
+            .order_by('round')
+        )
+        return Response({
+            'total': total,
+            'correct': correct,
+            'wrong': wrong,
+            'ai': ai,
+            'human': human,
+            'per_round': per_round,
+        })
