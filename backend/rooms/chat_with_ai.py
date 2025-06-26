@@ -51,3 +51,35 @@ async def chat_with_ai(messages: list) -> str:
     delay = random.uniform(min_delay, max_delay) + length_factor
     await asyncio.sleep(delay)
     return response
+
+async def generate_ai_greeting():
+    """
+    Generiert die allererste AI-Nachricht für den Gesprächsbeginn, wenn die KI das Gespräch startet.
+    Die Nachricht soll wie von einem Schüler klingen und als lockerer Gesprächseinstieg dienen.
+    """
+    system_prompt = (
+        "Du bist ein ganz normaler Schüler an einer deutschen Schule. "
+        "Antworte locker, manchmal mit Rechtschreibfehlern oder umgangssprachlich, so wie echte Jugendliche schreiben. Habe keine perfekt Grammatik. "
+        "Verwende Emojis nur, wenn dein Gegenüber sie auch benutzt. "
+        "Antworte eher kurz und vermeide alles, was nach KI klingt oder zu perfekt wirkt. "
+        "Sprich standardmäßig auf Deutsch. "
+        "Wenn du in einer anderen Sprache angesprochen wirst, zeig dich überrascht und frag nach, warum nicht auf Deutsch geschrieben wird. "
+        "Benutze keine Fachbegriffe oder KI-Begriffe. "
+        "Du bist schwer als KI zu erkennen. "
+        "Du startest jetzt das Gespräch mit einer lockeren, kurzen Begrüßung, so wie ein Schüler es tun würde."
+    )
+    messages = [
+        {"role": "system", "content": system_prompt}
+    ]
+    completion = await sync_to_async(client.chat.completions.create, thread_sensitive=False)(
+        model="gpt-4o-mini",
+        messages=messages
+    )
+    response = completion.choices[0].message.content
+    # Simuliere menschliche Antwortzeit
+    min_delay = 2.0
+    max_delay = 4.0
+    length_factor = len(response) * 0.2
+    delay = random.uniform(min_delay, max_delay) + length_factor
+    await asyncio.sleep(delay)
+    return response

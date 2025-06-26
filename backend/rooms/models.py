@@ -74,3 +74,14 @@ class Guess(models.Model):
     def __str__(self):
         result = "richtig" if self.is_correct else "falsch"
         return f"Guess by {self.user.username} in room {self.room.id if self.room else 'None'} round {self.round}: {result}"
+
+class ChatMessageLog(models.Model):
+    room = models.CharField(max_length=100)
+    sender = models.CharField(max_length=150, null=True, blank=True)  # can be null for AI
+    receiver = models.CharField(max_length=150, null=True, blank=True)  # can be null for AI
+    message = models.TextField()
+    round = models.IntegerField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"[{self.timestamp}] {self.sender} -> {self.receiver or 'AI'} in Room {self.room}: {self.message[:30]}"

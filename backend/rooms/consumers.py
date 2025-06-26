@@ -6,13 +6,15 @@ from asgiref.sync import sync_to_async
 
 from accounts.models import CustomUser
 from .chat_with_ai import chat_with_ai
-from .models import Room, RoomMembership, Match, Guess
+from .models import Room, RoomMembership, Match, Guess, ChatMessageLog
 from django.contrib.auth.models import AnonymousUser
 import random
 from django.db.models import Q
 
 from asgiref.sync import sync_to_async
 from .models import RoomMembership
+
+from .chat_with_ai import generate_ai_greeting, chat_with_ai
 
 logger = logging.getLogger(__name__)
 
@@ -242,6 +244,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
         # Erstelle für die restlichen Schüler Matches mit der KI (user2_id = None)
         for i in range(human_human_count, n):
             user1 = students[i]
+            ai_starts = random.choice([True, False])
             await sync_to_async(Match.objects.create)(
                 room=room,
                 user1_id=user1,
@@ -253,11 +256,12 @@ class RoomConsumer(AsyncWebsocketConsumer):
                 f"user_{user1}",
                 {
                     'type': 'conversation_start',
-                    'starter': True,
+                    'starter': not ai_starts,  # If AI starts, user is not starter
                 }
             )
-            # call ai
-            
+            if ai_starts:
+                # AI sends the first message
+                asyncio.create_task(self.ai_initiate_conversation_with_delay(user1, room.current_round))
 
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -282,10 +286,30 @@ class RoomConsumer(AsyncWebsocketConsumer):
                 round=room_round
             )
 
+            # Save message to log with room, sender, receiver as strings
+            receiver = None
+            if match.user2_id is None:
+                receiver = "AI"
+            else:
+                receiver_id = match.user1_id if match.user2_id == user else match.user2_id
+                # Try to get username, fallback to id
+                try:
+                    receiver_obj = await sync_to_async(CustomUser.objects.get)(id=receiver_id)
+                    receiver = receiver_obj.username
+                except Exception:
+                    receiver = str(receiver_id)
+            await sync_to_async(ChatMessageLog.objects.create)(
+                room=room_id,
+                sender=self.user.username,
+                receiver=receiver,
+                message=message,
+                round=room_round
+            )
+
             if match.is_active:
                 if match.user2_id is None:
                     past_messages.append({"role": "user", "content": message})
-                    asyncio.create_task(self.send_ai_response_with_delay(user, past_messages))
+                    asyncio.create_task(self.send_ai_response_with_delay(user, past_messages, room_round))
                 else:
                     receiver = match.user1_id if match.user2_id == user else match.user2_id
                     await self.channel_layer.group_send(
@@ -302,9 +326,39 @@ class RoomConsumer(AsyncWebsocketConsumer):
                 "message": f"Fehler beim Senden der privaten Nachricht: {str(e)}"
             }))
 
-    async def send_ai_response_with_delay(self, user, past_messages):
-        from .chat_with_ai import chat_with_ai
+    async def send_ai_response_with_delay(self, user, past_messages, room_round):
         response = await chat_with_ai(past_messages)
+        
+        # Save AI response to log
+        await sync_to_async(ChatMessageLog.objects.create)(
+            room=str(self.room_id),
+            sender="AI",  # AI has no username
+            receiver=self.user.username,
+            message=response,
+            round=room_round
+        )
+
+        await self.channel_layer.group_send(
+            f"user_{user}",
+            {
+                'type': 'private_message',
+                'message': response,
+            }
+        )
+
+    async def ai_initiate_conversation_with_delay(self, user, room_round):
+        """
+        Lässt die KI das Gespräch initiieren und sendet die erste Nachricht mit Verzögerung an den Nutzer.
+        """
+        response = await generate_ai_greeting()
+        # Speichere die AI-Nachricht im Log
+        await sync_to_async(ChatMessageLog.objects.create)(
+            room=str(self.room_id),
+            sender=None,  # AI hat keinen Usernamen
+            receiver=user if isinstance(user, str) else str(user),
+            message=response,
+            round=room_round
+        )
         await self.channel_layer.group_send(
             f"user_{user}",
             {
