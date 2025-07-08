@@ -298,28 +298,38 @@ class RoomGuessSummaryView(APIView):
         # Pro Runde: wie viele richtig/falsch, wie viele AI/Human getippt
         all_guesses = Guess.objects.filter(room_id=room_id)
         # Gesamtstatistik
-        total = all_guesses.count()
-        correct = all_guesses.filter(is_correct=True).count()
-        wrong = all_guesses.filter(is_correct=False).count()
-        ai = all_guesses.filter(guessed_ai=True).count()
-        human = all_guesses.filter(guessed_ai=False).count()
+        correct_ai = all_guesses.filter(is_correct=True, guessed_ai=True).count()
+        correct_human = all_guesses.filter(is_correct=True, guessed_ai=False).count()
+        wrong_ai = all_guesses.filter(is_correct=False, guessed_ai=True).count()
+        wrong_human = all_guesses.filter(is_correct=False, guessed_ai=False).count()
+        total_ai = correct_ai + wrong_human
+        total_human = correct_human + wrong_ai
+        ai_guesses = all_guesses.filter(guessed_ai=True).count()
+        human_guessess = all_guesses.filter(guessed_ai=False).count()
         # Pro Runde
         per_round = list(
             all_guesses.values('round')
             .annotate(
-                total=Count('id'),
-                correct=Count('id', filter=Q(is_correct=True)),
-                wrong=Count('id', filter=Q(is_correct=False)),
-                ai=Count('id', filter=Q(guessed_ai=True)),
-                human=Count('id', filter=Q(guessed_ai=False)),
+            total=Count('id'),
+            correct_ai=Count('id', filter=Q(is_correct=True, guessed_ai=True)),
+            correct_human=Count('id', filter=Q(is_correct=True, guessed_ai=False)),
+            wrong_ai=Count('id', filter=Q(is_correct=False, guessed_ai=True)),
+            wrong_human=Count('id', filter=Q(is_correct=False, guessed_ai=False)),
+            ai_guesses=Count('id', filter=Q(guessed_ai=True)),
+            human_guessess=Count('id', filter=Q(guessed_ai=False)),
+            total_ai=Count('id', filter=Q(is_correct=True, guessed_ai=True)) + Count('id', filter=Q(is_correct=False, guessed_ai=False)),
+            total_human=Count('id', filter=Q(is_correct=True, guessed_ai=False)) + Count('id', filter=Q(is_correct=False, guessed_ai=True)),
             )
             .order_by('round')
         )
         return Response({
-            'total': total,
-            'correct': correct,
-            'wrong': wrong,
-            'ai': ai,
-            'human': human,
+            'total_human': total_human,
+            'total_ai': total_ai,
+            'correct_ai': correct_ai,
+            'correct_human': correct_human,
+            'wrong_ai': wrong_ai,
+            'wrong_human': wrong_human,
+            'ai_guesses': ai_guesses,
+            'human_guessess': human_guessess,
             'per_round': per_round,
         })

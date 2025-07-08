@@ -173,6 +173,26 @@ function StudentPanel({ room, user }) {
   // Wenn user ein Gast ist, hole den Namen aus localStorage
   const displayName = localStorage.getItem("studentName") || user;
 
+  const totalGuesses = guessHistory.length;
+  const correctGuesses = guessHistory.filter((g) => g.is_correct).length;
+  const correctRate = totalGuesses > 0 ? Math.round((correctGuesses / totalGuesses) * 100) : 0;
+
+  const totalAI = guessHistory.filter(
+    (g) => (g.guessed_ai === true && g.is_correct) || (g.guessed_ai === false && !g.is_correct)
+  ).length;
+  const correctAI = guessHistory.filter(
+    (g) => (g.guessed_ai === true && g.is_correct)
+  ).length;
+  const correctRateAI = totalAI > 0 ? Math.round((correctAI / totalAI) * 100) : 0;
+
+  const totalHuman = guessHistory.filter(
+    (g) => (g.guessed_ai === false && g.is_correct) || (g.guessed_ai === true && !g.is_correct)
+  ).length;
+  const correctHuman = guessHistory.filter(
+    (g) => (g.guessed_ai === false && g.is_correct)
+  ).length;
+  const correctRateHuman = totalHuman > 0 ? Math.round((correctHuman / totalHuman) * 100) : 0;
+
   return (
     <Container className="mt-5 d-flex flex-column align-items-center">
       <Card
@@ -224,6 +244,219 @@ function StudentPanel({ room, user }) {
               </span>
             </div>
           </div>
+
+          {/* Gesamtübersicht: Richtig-Rate als Kreis */}
+          {totalGuesses > 0 && (
+            <div className="d-flex flex-column align-items-center mb-4">
+              <div style={{ fontWeight: 500, fontSize: 20, marginBottom: 8 }}>
+                Gesamt
+              </div>
+              <div style={{ display: "flex", gap: 32 }}>
+                {/* Gesamt */}
+                <div
+                  style={{
+                    position: "relative",
+                    width: 110,
+                    height: 110,
+                    textAlign: "center",
+                  }}
+                >
+                  <svg width="110" height="110">
+                    <circle
+                      cx="55"
+                      cy="55"
+                      r="50"
+                      stroke="#e0e0e0"
+                      strokeWidth="10"
+                      fill="none"
+                    />
+                    <circle
+                      cx="55"
+                      cy="55"
+                      r="50"
+                      stroke="#198754"
+                      strokeWidth="10"
+                      fill="none"
+                      strokeDasharray={2 * Math.PI * 50}
+                      strokeDashoffset={
+                        2 * Math.PI * 50 * (1 - correctRate / 100)
+                      }
+                      strokeLinecap="round"
+                      style={{ transition: "stroke-dashoffset 0.5s" }}
+                      transform="rotate(-90 55 55)"
+                    />
+                  </svg>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: 110,
+                      height: 110,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 28,
+                      fontWeight: 700,
+                      color: "#198754",
+                    }}
+                  >
+                    {correctRate}%
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 15,
+                      color: "#666",
+                      marginTop: 4,
+                    }}
+                  >
+                    {correctGuesses} von {totalGuesses} richtig
+                  </div>
+                </div>
+                {/* Mensch */}
+                <div
+                  style={{
+                    position: "relative",
+                    width: 110,
+                    height: 110,
+                    textAlign: "center",
+                  }}
+                >
+                  <svg width="110" height="110">
+                    <circle
+                      cx="55"
+                      cy="55"
+                      r="50"
+                      stroke="#e0e0e0"
+                      strokeWidth="10"
+                      fill="none"
+                    />
+                    <circle
+                      cx="55"
+                      cy="55"
+                      r="50"
+                      stroke="#0d6efd"
+                      strokeWidth="10"
+                      fill="none"
+                      strokeDasharray={2 * Math.PI * 50}
+                      strokeDashoffset={
+                        2 * Math.PI * 50 * (1 - correctRateHuman / 100)
+                      }
+                      strokeLinecap="round"
+                      style={{ transition: "stroke-dashoffset 0.5s" }}
+                      transform="rotate(-90 55 55)"
+                    />
+                  </svg>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: 110,
+                      height: 110,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 28,
+                      fontWeight: 700,
+                      color: "#0d6efd",
+                    }}
+                  >
+                    {correctRateHuman}%
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 15,
+                      color: "#666",
+                      marginTop: 4,
+                    }}
+                  >
+                    {correctHuman} von {totalHuman} richtig
+                  </div>
+                  <div
+                    style={{
+                      fontWeight: 500,
+                      color: "#0d6efd",
+                      marginTop: 2,
+                    }}
+                  >
+                    Mensch
+                  </div>
+                </div>
+                {/* KI */}
+                <div
+                  style={{
+                    position: "relative",
+                    width: 110,
+                    height: 110,
+                    textAlign: "center",
+                  }}
+                >
+                  <svg width="110" height="110">
+                    <circle
+                      cx="55"
+                      cy="55"
+                      r="50"
+                      stroke="#e0e0e0"
+                      strokeWidth="10"
+                      fill="none"
+                    />
+                    <circle
+                      cx="55"
+                      cy="55"
+                      r="50"
+                      stroke="#fd7e14"
+                      strokeWidth="10"
+                      fill="none"
+                      strokeDasharray={2 * Math.PI * 50}
+                      strokeDashoffset={
+                        2 * Math.PI * 50 * (1 - correctRateAI / 100)
+                      }
+                      strokeLinecap="round"
+                      style={{ transition: "stroke-dashoffset 0.5s" }}
+                      transform="rotate(-90 55 55)"
+                    />
+                  </svg>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: 110,
+                      height: 110,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 28,
+                      fontWeight: 700,
+                      color: "#fd7e14",
+                    }}
+                  >
+                    {correctRateAI}%
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 15,
+                      color: "#666",
+                      marginTop: 4,
+                    }}
+                  >
+                    {correctAI} von {totalAI} richtig
+                  </div>
+                  <div
+                    style={{
+                      fontWeight: 500,
+                      color: "#fd7e14",
+                      marginTop: 2,
+                    }}
+                  >
+                    KI
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="mb-3 text-center">
             <div
               style={{
@@ -339,7 +572,7 @@ function StudentPanel({ room, user }) {
             </div>
           )}
 
-          {/* Guess-Historie anzeigen */}
+          {/* Neue Guess-Historie Tabelle */}
           {guessHistory.length > 0 && (
             <div className="shadow p-3 mt-4" style={{ borderRadius: 20 }}>
               <div
@@ -360,30 +593,48 @@ function StudentPanel({ room, user }) {
                     <tr>
                       <th>Runde</th>
                       <th>Dein Tipp</th>
-                      <th>Ergebnis</th>
-                      <th>Zeitpunkt</th>
+                      <th>Es war</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {guessHistory.map((g) => (
-                      <tr key={g.id}>
-                        <td>{g.round}</td>
-                        <td>{g.guessed_ai ? "KI" : "Mensch"}</td>
-                        <td
+                    {guessHistory.map((g) => {
+                      let realType;
+                      if (g.guessed_ai) {
+                        realType = g.is_correct ? "KI" : "Mensch";
+                      } else {
+                        realType = g.is_correct ? "Mensch" : "KI";
+                      }
+                      return (
+                        <tr
+                          key={g.id}
                           style={{
-                            color: g.is_correct ? "#198754" : "#dc3545",
-                            fontWeight: 600,
+                            backgroundColor: g.is_correct ? "#d1e7dd" : "#f8d7da",
                           }}
                         >
-                          {g.is_correct ? "Richtig" : "Falsch"}
-                        </td>
-                        <td>
-                          {g.created_at
-                            ? new Date(g.created_at).toLocaleString()
-                            : ""}
-                        </td>
-                      </tr>
-                    ))}
+                          <td
+                            style={{
+                              backgroundColor: g.is_correct ? "#d1e7dd" : "#f8d7da",
+                            }}
+                          >
+                            {g.round}
+                          </td>
+                          <td
+                            style={{
+                              backgroundColor: g.is_correct ? "#d1e7dd" : "#f8d7da",
+                            }}
+                          >
+                            {g.guessed_ai ? "KI" : "Mensch"}
+                          </td>
+                          <td
+                            style={{
+                              backgroundColor: g.is_correct ? "#d1e7dd" : "#f8d7da",
+                            }}
+                          >
+                            {realType}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
