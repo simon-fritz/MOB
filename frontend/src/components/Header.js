@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Navbar, Container, Nav, Button } from "react-bootstrap";
-import { useNavigate, useLocation} from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 function Header() {
   const navigate = useNavigate();
@@ -9,25 +9,24 @@ function Header() {
   const [isJoinedRoom, setIsJoinedRoom] = useState(false);
 
   useEffect(() => {
-      // Check if teacher is logged in (e.g., token in localStorage)
-      const teacherToken = localStorage.getItem("accessToken");
-      if (teacherToken) {
-            setIsTeacherLoggedIn(true);
-      }
-      else {
-        setIsTeacherLoggedIn(false);
-      }
-    }, [
-      localStorage.getItem("accessToken"),
-      localStorage.getItem("refreshToken")
-    ]);
+    // Check if teacher is logged in (e.g., token in localStorage)
+    const teacherToken = localStorage.getItem("accessToken");
+    if (teacherToken) {
+      setIsTeacherLoggedIn(true);
+    } else {
+      setIsTeacherLoggedIn(false);
+    }
+  }, [
+    localStorage.getItem("accessToken"),
+    localStorage.getItem("refreshToken"),
+  ]);
 
   useEffect(() => {
     // Check if current path matches /rooms/:roomId
     const isRoom = /^\/rooms\/[^/]+$/.test(location.pathname);
     setIsJoinedRoom(isRoom);
   }, [location.pathname]);
-  
+
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
@@ -54,7 +53,7 @@ function Header() {
           onClick={() => navigate("/")}
           role="button"
         >
-          MOB
+          Mensch oder Bot?
         </Navbar.Brand>
         <Nav className="ms-auto align-items-center">
           {isJoinedRoom ? (

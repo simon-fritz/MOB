@@ -408,6 +408,23 @@ class RoomConsumer(AsyncWebsocketConsumer):
             "message": "Dein Tipp war " + ("richtig" if correct else "falsch")
         }))
 
+        # Benachrichtige alle im Raum, dass ein Schüler abgestimmt hat (für Lehrer-Panel)
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'student_guessed',
+                'user': user.username,
+                'room_round': room_round
+            }
+        )
+
+    async def student_guessed(self, event):
+        # Sende Event an alle Clients (Frontend filtert ggf. selbst)
+        await self.send(text_data=json.dumps({
+            "type": "student_guessed",
+            "room_round": event.get("room_round")
+        }))
+
     async def start_timer(self, duration):
         for remaining in range(duration, -1, -1):
             await self.channel_layer.group_send(

@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { Card, Container, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
+import {
+  Card,
+  Container,
+  Alert,
+  OverlayTrigger,
+  Tooltip,
+} from "react-bootstrap";
 import RoomMembers from "./RoomMembers";
 import Timer from "./Timer";
 import API from "./api";
@@ -35,9 +41,8 @@ function TeacherPanel({ room }) {
       if (data.type === "timer") {
         setTimerString(data.seconds);
       }
-      if (data.type === "round_started") {
-        room.current_round = parseInt(data.current_round, 10);
-        // Statistiken nach neuer Runde neu laden
+      // Automatisches Aktualisieren der Statistiken, wenn ein Schüler abgestimmt hat
+      if (data.type === "student_guessed") {
         if (TeacherPanel.fetchStats) TeacherPanel.fetchStats();
       }
     };
@@ -178,8 +183,8 @@ function TeacherPanel({ room }) {
             >
               <Alert.Heading>Verbindungsfehler</Alert.Heading>
               <p>
-                Die Verbindung zum Server ist fehlgeschlagen. Bitte erstelle einen
-                neuen Raum.
+                Die Verbindung zum Server ist fehlgeschlagen. Bitte erstelle
+                einen neuen Raum.
               </p>
               <button
                 className="btn btn-outline-danger"
@@ -191,236 +196,296 @@ function TeacherPanel({ room }) {
           )}
           {/* Guess-Statistik anzeigen */}
           {guessStats && (
-            <div className="shadow p-3 mt-4" style={{ maxWidth: 800, width: "100%", borderRadius: 20, background: '#f8fafc' }}>
-              <div className="bg-info text-white text-center" style={{ borderRadius: 15, fontSize: 20, fontWeight: 500, padding: 10 }}>
-                Auswertung der Schätzungen
-              </div>
-              <button
-                className="btn btn-outline-info mb-2 mt-3"
-                onClick={() => TeacherPanel.fetchStats && TeacherPanel.fetchStats()}
-                style={{ maxWidth: 300 }}
+            <div
+              className="shadow p-3 mt-4"
+              style={{
+                maxWidth: 800,
+                width: "100%",
+                borderRadius: 20,
+                background: "#f8fafc",
+              }}
+            >
+              <div
+                className="bg-info text-white text-center"
+                style={{
+                  borderRadius: 15,
+                  fontSize: 20,
+                  fontWeight: 500,
+                  padding: 10,
+                }}
               >
-                Ergebnisse aktualisieren
-              </button>
+                So haben die Schüler abgestimmt:
+              </div>
               <div className="mb-3">
                 <strong>Alle Runden:</strong>
                 <div className="d-flex gap-4 mt-2">
-                {guessStats.per_round.length > 0 && (
-                  <div style={{ display: "flex", gap: 32 }}>
-                    {/* Gesamt */}
-                    <div style={{ width: 180, height: 180, textAlign: "center" }}>
-                      <svg width="180" height="180" viewBox="0 0 180 180">
-                        {(() => {
-                          const totalCorrect = guessStats.per_round.reduce(
-                            (sum, r) => sum + r.correct_human + r.correct_ai,
-                            0
-                          );
-                          const total = guessStats.per_round.reduce(
-                            (sum, r) => sum + r.total,
-                            0
-                          );
-                          const percent = total > 0 ? totalCorrect / total : 0;
-                          const radius = 80;
-                          const circumference = 2 * Math.PI * radius;
-                          const arc = circumference * percent;
-                          return (
-                            <>
-                              <circle
-                                cx="90"
-                                cy="90"
-                                r={radius}
-                                fill="#f1f5f9"
-                                stroke="#e5e7eb"
-                                strokeWidth="16"
-                              />
-                              <circle
-                                cx="90"
-                                cy="90"
-                                r={radius}
-                                fill="none"
-                                stroke="#0d6efd"
-                                strokeWidth="16"
-                                strokeDasharray={`${arc} ${circumference - arc}`}
-                                strokeDashoffset={0}
-                                transform="rotate(-90 90 90)"
-                                style={{ transition: "stroke-dasharray 0.5s" }}
-                              />
-                              <text
-                                x="90"
-                                y="90"
-                                textAnchor="middle"
-                                dominantBaseline="central"
-                                fontSize="32"
-                                fontWeight="bold"
-                                fill="#0d6efd"
-                              >
-                                {Math.round(percent * 100)}%
-                              </text>
-                              <text
-                                x="90"
-                                y="120"
-                                textAnchor="middle"
-                                fontSize="16"
-                                fill="#333"
-                              >
-                                {totalCorrect}/{total}
-                              </text>
-                            </>
-                          );
-                        })()}
-                      </svg>
-                      <div style={{ fontWeight: 500, color: '#0d6efd', marginTop: 4 }}>Gesamt</div>
+                  {guessStats.per_round.length > 0 && (
+                    <div style={{ display: "flex", gap: 32 }}>
+                      {/* Gesamt */}
+                      <div
+                        style={{ width: 180, height: 180, textAlign: "center" }}
+                      >
+                        <svg width="180" height="180" viewBox="0 0 180 180">
+                          {(() => {
+                            const totalCorrect = guessStats.per_round.reduce(
+                              (sum, r) => sum + r.correct_human + r.correct_ai,
+                              0
+                            );
+                            const total = guessStats.per_round.reduce(
+                              (sum, r) => sum + r.total,
+                              0
+                            );
+                            const percent =
+                              total > 0 ? totalCorrect / total : 0;
+                            const radius = 80;
+                            const circumference = 2 * Math.PI * radius;
+                            const arc = circumference * percent;
+                            return (
+                              <>
+                                <circle
+                                  cx="90"
+                                  cy="90"
+                                  r={radius}
+                                  fill="#f1f5f9"
+                                  stroke="#e5e7eb"
+                                  strokeWidth="16"
+                                />
+                                <circle
+                                  cx="90"
+                                  cy="90"
+                                  r={radius}
+                                  fill="none"
+                                  stroke="#0d6efd"
+                                  strokeWidth="16"
+                                  strokeDasharray={`${arc} ${
+                                    circumference - arc
+                                  }`}
+                                  strokeDashoffset={0}
+                                  transform="rotate(-90 90 90)"
+                                  style={{
+                                    transition: "stroke-dasharray 0.5s",
+                                  }}
+                                />
+                                <text
+                                  x="90"
+                                  y="90"
+                                  textAnchor="middle"
+                                  dominantBaseline="central"
+                                  fontSize="32"
+                                  fontWeight="bold"
+                                  fill="#0d6efd"
+                                >
+                                  {Math.round(percent * 100)}%
+                                </text>
+                                <text
+                                  x="90"
+                                  y="120"
+                                  textAnchor="middle"
+                                  fontSize="16"
+                                  fill="#333"
+                                >
+                                  {totalCorrect}/{total}
+                                </text>
+                              </>
+                            );
+                          })()}
+                        </svg>
+                        <div
+                          style={{
+                            fontWeight: 500,
+                            color: "#0d6efd",
+                            marginTop: 4,
+                          }}
+                        >
+                          Gesamt
+                        </div>
+                      </div>
+                      {/* Mensch */}
+                      <div
+                        style={{ width: 180, height: 180, textAlign: "center" }}
+                      >
+                        <svg width="180" height="180" viewBox="0 0 180 180">
+                          {(() => {
+                            const totalCorrect = guessStats.per_round.reduce(
+                              (sum, r) => sum + (r.correct_human || 0),
+                              0
+                            );
+                            const total = guessStats.per_round.reduce(
+                              (sum, r) => sum + (r.total_human || 0),
+                              0
+                            );
+                            const percent =
+                              total > 0 ? totalCorrect / total : 0;
+                            const radius = 80;
+                            const circumference = 2 * Math.PI * radius;
+                            const arc = circumference * percent;
+                            return (
+                              <>
+                                <circle
+                                  cx="90"
+                                  cy="90"
+                                  r={radius}
+                                  fill="#f1f5f9"
+                                  stroke="#e5e7eb"
+                                  strokeWidth="16"
+                                />
+                                <circle
+                                  cx="90"
+                                  cy="90"
+                                  r={radius}
+                                  fill="none"
+                                  stroke="#198754"
+                                  strokeWidth="16"
+                                  strokeDasharray={`${arc} ${
+                                    circumference - arc
+                                  }`}
+                                  strokeDashoffset={0}
+                                  transform="rotate(-90 90 90)"
+                                  style={{
+                                    transition: "stroke-dasharray 0.5s",
+                                  }}
+                                />
+                                <text
+                                  x="90"
+                                  y="90"
+                                  textAnchor="middle"
+                                  dominantBaseline="central"
+                                  fontSize="32"
+                                  fontWeight="bold"
+                                  fill="#198754"
+                                >
+                                  {Math.round(percent * 100)}%
+                                </text>
+                                <text
+                                  x="90"
+                                  y="120"
+                                  textAnchor="middle"
+                                  fontSize="16"
+                                  fill="#333"
+                                >
+                                  {totalCorrect}/{total}
+                                </text>
+                              </>
+                            );
+                          })()}
+                        </svg>
+                        <div
+                          style={{
+                            fontWeight: 500,
+                            color: "#198754",
+                            marginTop: 4,
+                          }}
+                        >
+                          Mensch
+                        </div>
+                      </div>
+                      {/* KI */}
+                      <div
+                        style={{ width: 180, height: 180, textAlign: "center" }}
+                      >
+                        <svg width="180" height="180" viewBox="0 0 180 180">
+                          {(() => {
+                            const totalCorrect = guessStats.per_round.reduce(
+                              (sum, r) => sum + (r.correct_ai || 0),
+                              0
+                            );
+                            const total = guessStats.per_round.reduce(
+                              (sum, r) => sum + (r.total_ai || 0),
+                              0
+                            );
+                            const percent =
+                              total > 0 ? totalCorrect / total : 0;
+                            const radius = 80;
+                            const circumference = 2 * Math.PI * radius;
+                            const arc = circumference * percent;
+                            return (
+                              <>
+                                <circle
+                                  cx="90"
+                                  cy="90"
+                                  r={radius}
+                                  fill="#f1f5f9"
+                                  stroke="#e5e7eb"
+                                  strokeWidth="16"
+                                />
+                                <circle
+                                  cx="90"
+                                  cy="90"
+                                  r={radius}
+                                  fill="none"
+                                  stroke="#fd7e14"
+                                  strokeWidth="16"
+                                  strokeDasharray={`${arc} ${
+                                    circumference - arc
+                                  }`}
+                                  strokeDashoffset={0}
+                                  transform="rotate(-90 90 90)"
+                                  style={{
+                                    transition: "stroke-dasharray 0.5s",
+                                  }}
+                                />
+                                <text
+                                  x="90"
+                                  y="90"
+                                  textAnchor="middle"
+                                  dominantBaseline="central"
+                                  fontSize="32"
+                                  fontWeight="bold"
+                                  fill="#fd7e14"
+                                >
+                                  {Math.round(percent * 100)}%
+                                </text>
+                                <text
+                                  x="90"
+                                  y="120"
+                                  textAnchor="middle"
+                                  fontSize="16"
+                                  fill="#333"
+                                >
+                                  {totalCorrect}/{total}
+                                </text>
+                              </>
+                            );
+                          })()}
+                        </svg>
+                        <div
+                          style={{
+                            fontWeight: 500,
+                            color: "#fd7e14",
+                            marginTop: 4,
+                          }}
+                        >
+                          KI
+                        </div>
+                      </div>
                     </div>
-                    {/* Mensch */}
-                    <div style={{ width: 180, height: 180, textAlign: "center" }}>
-                      <svg width="180" height="180" viewBox="0 0 180 180">
-                        {(() => {
-                          const totalCorrect = guessStats.per_round.reduce(
-                            (sum, r) => sum + (r.correct_human || 0),
-                            0
-                          );
-                          const total = guessStats.per_round.reduce(
-                            (sum, r) => sum + (r.total_human || 0),
-                            0
-                          );
-                          const percent = total > 0 ? totalCorrect / total : 0;
-                          const radius = 80;
-                          const circumference = 2 * Math.PI * radius;
-                          const arc = circumference * percent;
-                          return (
-                            <>
-                              <circle
-                                cx="90"
-                                cy="90"
-                                r={radius}
-                                fill="#f1f5f9"
-                                stroke="#e5e7eb"
-                                strokeWidth="16"
-                              />
-                              <circle
-                                cx="90"
-                                cy="90"
-                                r={radius}
-                                fill="none"
-                                stroke="#198754"
-                                strokeWidth="16"
-                                strokeDasharray={`${arc} ${circumference - arc}`}
-                                strokeDashoffset={0}
-                                transform="rotate(-90 90 90)"
-                                style={{ transition: "stroke-dasharray 0.5s" }}
-                              />
-                              <text
-                                x="90"
-                                y="90"
-                                textAnchor="middle"
-                                dominantBaseline="central"
-                                fontSize="32"
-                                fontWeight="bold"
-                                fill="#198754"
-                              >
-                                {Math.round(percent * 100)}%
-                              </text>
-                              <text
-                                x="90"
-                                y="120"
-                                textAnchor="middle"
-                                fontSize="16"
-                                fill="#333"
-                              >
-                                {totalCorrect}/{total}
-                              </text>
-                            </>
-                          );
-                        })()}
-                      </svg>
-                      <div style={{ fontWeight: 500, color: '#198754', marginTop: 4 }}>Mensch</div>
-                    </div>
-                    {/* KI */}
-                    <div style={{ width: 180, height: 180, textAlign: "center" }}>
-                      <svg width="180" height="180" viewBox="0 0 180 180">
-                        {(() => {
-                          const totalCorrect = guessStats.per_round.reduce(
-                            (sum, r) => sum + (r.correct_ai || 0),
-                            0
-                          );
-                          const total = guessStats.per_round.reduce(
-                            (sum, r) => sum + (r.total_ai || 0),
-                            0
-                          );
-                          const percent = total > 0 ? totalCorrect / total : 0;
-                          const radius = 80;
-                          const circumference = 2 * Math.PI * radius;
-                          const arc = circumference * percent;
-                          return (
-                            <>
-                              <circle
-                                cx="90"
-                                cy="90"
-                                r={radius}
-                                fill="#f1f5f9"
-                                stroke="#e5e7eb"
-                                strokeWidth="16"
-                              />
-                              <circle
-                                cx="90"
-                                cy="90"
-                                r={radius}
-                                fill="none"
-                                stroke="#fd7e14"
-                                strokeWidth="16"
-                                strokeDasharray={`${arc} ${circumference - arc}`}
-                                strokeDashoffset={0}
-                                transform="rotate(-90 90 90)"
-                                style={{ transition: "stroke-dasharray 0.5s" }}
-                              />
-                              <text
-                                x="90"
-                                y="90"
-                                textAnchor="middle"
-                                dominantBaseline="central"
-                                fontSize="32"
-                                fontWeight="bold"
-                                fill="#fd7e14"
-                              >
-                                {Math.round(percent * 100)}%
-                              </text>
-                              <text
-                                x="90"
-                                y="120"
-                                textAnchor="middle"
-                                fontSize="16"
-                                fill="#333"
-                              >
-                                {totalCorrect}/{total}
-                              </text>
-                            </>
-                          );
-                        })()}
-                      </svg>
-                      <div style={{ fontWeight: 500, color: '#fd7e14', marginTop: 4 }}>KI</div>
-                    </div>
-                  </div>
-                )}
+                  )}
                 </div>
               </div>
-              <div>
+              <div style={{ paddingTop: "20px" }}>
                 <strong>Pro Runde:</strong>
                 <table className="table table-bordered mt-2">
                   <thead>
                     <tr>
                       <th>Runde</th>
-                      <th>Mensch erkannt</th>
+                      <th>Menschen erkannt</th>
                       <th>KI erkannt</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {guessStats.per_round.map((r) => (
-                      <tr key={r.round}>
-                        <td>{r.round}</td>
-                        <td style={{ color: "#198754", fontWeight: 600 }}>{(r.correct_human + "/" + r.total_human) ?? 0}</td>
-                        <td style={{ color: "#fd7e14", fontWeight: 600 }}>{(r.correct_ai + "/" + r.total_ai) ?? 0}</td>
-                      </tr>
-                    ))}
+                    {[...guessStats.per_round]
+                      .sort((a, b) => b.round - a.round)
+                      .map((r) => (
+                        <tr key={r.round}>
+                          <td>{r.round}</td>
+                          <td style={{ color: "#198754", fontWeight: 600 }}>
+                            {r.correct_human + "/" + r.total_human ?? 0}
+                          </td>
+                          <td style={{ color: "#fd7e14", fontWeight: 600 }}>
+                            {r.correct_ai + "/" + r.total_ai ?? 0}
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>

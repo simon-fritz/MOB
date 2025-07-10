@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { Card, Container, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
+import {
+  Card,
+  Container,
+  Alert,
+  OverlayTrigger,
+  Tooltip,
+} from "react-bootstrap";
 import RoomMembers from "./RoomMembers";
 import Timer from "./Timer";
 
@@ -175,23 +181,30 @@ function StudentPanel({ room, user }) {
 
   const totalGuesses = guessHistory.length;
   const correctGuesses = guessHistory.filter((g) => g.is_correct).length;
-  const correctRate = totalGuesses > 0 ? Math.round((correctGuesses / totalGuesses) * 100) : 0;
+  const correctRate =
+    totalGuesses > 0 ? Math.round((correctGuesses / totalGuesses) * 100) : 0;
 
   const totalAI = guessHistory.filter(
-    (g) => (g.guessed_ai === true && g.is_correct) || (g.guessed_ai === false && !g.is_correct)
+    (g) =>
+      (g.guessed_ai === true && g.is_correct) ||
+      (g.guessed_ai === false && !g.is_correct)
   ).length;
   const correctAI = guessHistory.filter(
-    (g) => (g.guessed_ai === true && g.is_correct)
+    (g) => g.guessed_ai === true && g.is_correct
   ).length;
-  const correctRateAI = totalAI > 0 ? Math.round((correctAI / totalAI) * 100) : 0;
+  const correctRateAI =
+    totalAI > 0 ? Math.round((correctAI / totalAI) * 100) : 0;
 
   const totalHuman = guessHistory.filter(
-    (g) => (g.guessed_ai === false && g.is_correct) || (g.guessed_ai === true && !g.is_correct)
+    (g) =>
+      (g.guessed_ai === false && g.is_correct) ||
+      (g.guessed_ai === true && !g.is_correct)
   ).length;
   const correctHuman = guessHistory.filter(
-    (g) => (g.guessed_ai === false && g.is_correct)
+    (g) => g.guessed_ai === false && g.is_correct
   ).length;
-  const correctRateHuman = totalHuman > 0 ? Math.round((correctHuman / totalHuman) * 100) : 0;
+  const correctRateHuman =
+    totalHuman > 0 ? Math.round((correctHuman / totalHuman) * 100) : 0;
 
   return (
     <Container className="mt-5 d-flex flex-column align-items-center">
@@ -214,7 +227,7 @@ function StudentPanel({ room, user }) {
           }}
         >
           <span role="img" aria-label="student">
-            🎓
+            🏫
           </span>{" "}
           {room.name}
         </Card.Header>
@@ -245,9 +258,127 @@ function StudentPanel({ room, user }) {
             </div>
           </div>
 
+          <div className="mb-3 text-center">
+            <div
+              style={{
+                fontSize: 48,
+                fontWeight: 700,
+                marginBottom: 8,
+              }}
+            >
+              <Timer timerString={timerString} />
+            </div>
+          </div>
+          <OverlayTrigger
+            placement="bottom"
+            overlay={
+              <Tooltip id="websocket-status-tooltip">
+                WebSocket-Verbindung:{" "}
+                {socketStatus === "Connected" ? "Verbunden" : "Nicht verbunden"}
+              </Tooltip>
+            }
+          >
+            <span
+              style={{
+                position: "absolute",
+                top: 20,
+                right: 30,
+                cursor: "pointer",
+              }}
+            >
+              <i
+                className={`bi ${
+                  socketStatus === "Connected" ? "bi-wifi" : "bi-wifi-off"
+                }`}
+                style={{
+                  color: socketStatus === "Connected" ? "#198754" : "#dc3545",
+                  fontSize: 22,
+                }}
+              ></i>
+            </span>
+          </OverlayTrigger>
+
+          {roundStatus === RoundStatus.STARTED && (
+            <div className="shadow p-4 mt-4" style={{ borderRadius: 20 }}>
+              <div
+                className="text-center bg-info text-white"
+                style={{
+                  borderRadius: 15,
+                  fontSize: 22,
+                  fontWeight: 500,
+                  marginBottom: 16,
+                  padding: 8,
+                }}
+              >
+                Chat
+              </div>
+              <div className="private-chat">
+                <h5
+                  style={{
+                    fontWeight: 500,
+                    marginBottom: 16,
+                  }}
+                >
+                  {hasTurn
+                    ? "Du schreibst die nächste Nachricht"
+                    : "Dein Gegenüber schreibt die nächste Nachricht"}
+                </h5>
+                <div
+                  className="chat-window"
+                  style={{
+                    border: "1px solid #ccc",
+                    height: "300px",
+                    overflowY: "auto",
+                    padding: "10px",
+                    backgroundColor: "#f9f9f9",
+                    borderRadius: 10,
+                    marginBottom: 12,
+                  }}
+                >
+                  {messages.map((msg, index) => (
+                    <div key={index} style={{ marginBottom: "8px" }}>
+                      <strong>{msg.username}: </strong>
+                      <span>{msg.message}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="chat-input mt-2" style={{ display: "flex" }}>
+                  {hasTurn ? (
+                    <>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Nachricht eingeben..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyDown={handleKeyPress}
+                        style={{ borderRadius: 8, fontSize: 18 }}
+                      />
+                      <button
+                        className="btn btn-primary ml-2"
+                        onClick={handleSend}
+                        style={{
+                          marginLeft: "10px",
+                          fontWeight: 500,
+                          fontSize: 18,
+                          borderRadius: 8,
+                        }}
+                      >
+                        Senden
+                      </button>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Gesamtübersicht: Richtig-Rate als Kreis */}
-          {totalGuesses > 0 && (
-            <div className="d-flex flex-column align-items-center mb-4">
+          {totalGuesses > 0 && roundStatus !== RoundStatus.STARTED && (
+            <div
+              className="d-flex flex-column align-items-center mb-4"
+              style={{ paddingBottom: 40 }}
+            >
               <div style={{ fontWeight: 500, fontSize: 20, marginBottom: 8 }}>
                 Gesamt
               </div>
@@ -457,123 +588,8 @@ function StudentPanel({ room, user }) {
             </div>
           )}
 
-          <div className="mb-3 text-center">
-            <div
-              style={{
-                fontSize: 48,
-                fontWeight: 700,
-                marginBottom: 8,
-              }}
-            >
-              <Timer timerString={timerString} />
-            </div>
-          </div>
-          <OverlayTrigger
-            placement="bottom"
-            overlay={
-              <Tooltip id="websocket-status-tooltip">
-                WebSocket-Verbindung:{" "}
-                {socketStatus === "Connected" ? "Verbunden" : "Nicht verbunden"}
-              </Tooltip>
-            }
-          >
-            <span
-              style={{
-                position: "absolute",
-                top: 20,
-                right: 30,
-                cursor: "pointer",
-              }}
-            >
-              <i
-                className={`bi ${
-                  socketStatus === "Connected" ? "bi-wifi" : "bi-wifi-off"
-                }`}
-                style={{
-                  color: socketStatus === "Connected" ? "#198754" : "#dc3545",
-                  fontSize: 22,
-                }}
-              ></i>
-            </span>
-          </OverlayTrigger>
-
-          {roundStatus === RoundStatus.STARTED && (
-            <div className="shadow p-4 mt-4" style={{ borderRadius: 20 }}>
-              <div
-                className="text-center bg-info text-white"
-                style={{
-                  borderRadius: 15,
-                  fontSize: 22,
-                  fontWeight: 500,
-                  marginBottom: 16,
-                  padding: 8,
-                }}
-              >
-                Chat
-              </div>
-              <div className="private-chat">
-                <h5
-                  style={{
-                    fontWeight: 500,
-                    marginBottom: 16,
-                  }}
-                >
-                  {hasTurn
-                    ? "Du schreibst die nächste Nachricht"
-                    : "Dein Gegenüber schreibt die nächste Nachricht"}
-                </h5>
-                <div
-                  className="chat-window"
-                  style={{
-                    border: "1px solid #ccc",
-                    height: "300px",
-                    overflowY: "auto",
-                    padding: "10px",
-                    backgroundColor: "#f9f9f9",
-                    borderRadius: 10,
-                    marginBottom: 12,
-                  }}
-                >
-                  {messages.map((msg, index) => (
-                    <div key={index} style={{ marginBottom: "8px" }}>
-                      <strong>{msg.username}: </strong>
-                      <span>{msg.message}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="chat-input mt-2" style={{ display: "flex" }}>
-                  {hasTurn ? (
-                    <>
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Nachricht eingeben..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyDown={handleKeyPress}
-                        style={{ borderRadius: 8, fontSize: 18 }}
-                      />
-                      <button
-                        className="btn btn-primary ml-2"
-                        onClick={handleSend}
-                        style={{
-                          marginLeft: "10px",
-                          fontWeight: 500,
-                          fontSize: 18,
-                          borderRadius: 8,
-                        }}
-                      >
-                        Senden
-                      </button>
-                    </>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Neue Guess-Historie Tabelle */}
-          {guessHistory.length > 0 && (
+          {guessHistory.length > 0 && roundStatus !== RoundStatus.STARTED && (
             <div className="shadow p-3 mt-4" style={{ borderRadius: 20 }}>
               <div
                 className="bg-secondary text-white text-center"
@@ -608,26 +624,34 @@ function StudentPanel({ room, user }) {
                         <tr
                           key={g.id}
                           style={{
-                            backgroundColor: g.is_correct ? "#d1e7dd" : "#f8d7da",
+                            backgroundColor: g.is_correct
+                              ? "#d1e7dd"
+                              : "#f8d7da",
                           }}
                         >
                           <td
                             style={{
-                              backgroundColor: g.is_correct ? "#d1e7dd" : "#f8d7da",
+                              backgroundColor: g.is_correct
+                                ? "#d1e7dd"
+                                : "#f8d7da",
                             }}
                           >
                             {g.round}
                           </td>
                           <td
                             style={{
-                              backgroundColor: g.is_correct ? "#d1e7dd" : "#f8d7da",
+                              backgroundColor: g.is_correct
+                                ? "#d1e7dd"
+                                : "#f8d7da",
                             }}
                           >
                             {g.guessed_ai ? "KI" : "Mensch"}
                           </td>
                           <td
                             style={{
-                              backgroundColor: g.is_correct ? "#d1e7dd" : "#f8d7da",
+                              backgroundColor: g.is_correct
+                                ? "#d1e7dd"
+                                : "#f8d7da",
                             }}
                           >
                             {realType}
@@ -689,7 +713,9 @@ function StudentPanel({ room, user }) {
               <div
                 className={
                   "text-center text-white" +
-                  (guessResult.includes("falsch") ? " bg-danger" : " bg-success")
+                  (guessResult.includes("falsch")
+                    ? " bg-danger"
+                    : " bg-success")
                 }
                 style={{
                   borderRadius: 15,
@@ -717,8 +743,8 @@ function StudentPanel({ room, user }) {
             >
               <Alert.Heading>Verbindungsfehler</Alert.Heading>
               <p>
-                Die Verbindung zum Server ist fehlgeschlagen. Bitte erstelle einen
-                neuen Raum.
+                Die Verbindung zum Server ist fehlgeschlagen. Bitte erstelle
+                einen neuen Raum.
               </p>
               <button
                 className="btn btn-outline-danger"
