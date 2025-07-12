@@ -1,3 +1,4 @@
+import { BACKEND_WS } from "./backend_urls";
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -25,7 +26,7 @@ function TeacherPanel({ room }) {
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     const socket = new WebSocket(
-      `ws://localhost:8000/ws/rooms/${room.id}/?token=${token}`
+      `${BACKEND_WS}/ws/rooms/${room.id}/?token=${token}`
     );
     socket.onopen = () => {
       setSocketStatus("Connected");

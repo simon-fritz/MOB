@@ -1,3 +1,4 @@
+import { BACKEND_WS } from "./backend_urls";
 import React, { useState, useEffect, useRef } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -43,9 +44,9 @@ function StudentPanel({ room, user }) {
     const studentId = localStorage.getItem("studentId");
     let wsUrl;
     if (studentId) {
-      wsUrl = `ws://localhost:8000/ws/rooms/${room.id}/?student_id=${studentId}`;
+      wsUrl = `${BACKEND_WS}/ws/rooms/${room.id}/?student_id=${studentId}`;
     } else {
-      wsUrl = `ws://localhost:8000/ws/rooms/${room.id}/?token=${token}`;
+      wsUrl = `${BACKEND_WS}/ws/rooms/${room.id}/?token=${token}`;
     }
     ws.current = new WebSocket(wsUrl);
 

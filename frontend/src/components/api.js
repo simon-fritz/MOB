@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { BACKEND_HTTP } from "./backend_urls";
 
 const API = axios.create({
-  baseURL: 'http://127.0.0.1:8000',
+  baseURL: BACKEND_HTTP,
 });
 
 API.interceptors.request.use((config) => {
@@ -23,7 +24,7 @@ API.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refreshToken');
         if (refreshToken) {
-          const response = await axios.post('http://127.0.0.1:8000/accounts/token/refresh/', {
+          const response = await axios.post(`${BACKEND_HTTP}/accounts/token/refresh/`, {
             refresh: refreshToken,
           });
 

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { BACKEND_HTTP } from "./backend_urls";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -17,7 +18,7 @@ const RegisterForm = () => {
     setError("");
     setSuccess("");
     axios
-      .post("http://127.0.0.1:8000/accounts/register/", {
+      .post(`${BACKEND_HTTP}/accounts/register/`, {
         username,
         password,
         role: "teacher",

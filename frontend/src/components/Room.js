@@ -5,6 +5,7 @@ import TeacherPanel from "./TeacherPanel";
 import API from "./api";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { BACKEND_HTTP } from "./backend_urls";
 
 function Room() {
   const [isStudent, setIsStudent] = useState(null);
@@ -17,7 +18,7 @@ function Room() {
     const fetchRoom = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8000/api/rooms/${roomId}/`
+          `${BACKEND_HTTP}/api/rooms/${roomId}/`
         );
         setRoom(response.data);
       } catch (err) {
