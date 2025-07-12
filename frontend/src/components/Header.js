@@ -2,11 +2,53 @@ import React, { useState, useEffect } from "react";
 import { Navbar, Container, Nav, Button } from "react-bootstrap";
 import { useNavigate, useLocation } from "react-router-dom";
 
+// LimeSurvey Icon (externes SVG)
+const LimeSurveyIcon = ({ onClick }) => (
+  <button
+    onClick={onClick}
+    style={{
+      background: "#fff",
+      border: "1px solid #fff",
+      borderRadius: 4,
+      padding: "4px 6px",
+      marginLeft: 12,
+      display: "flex",
+      alignItems: "center",
+      cursor: "pointer",
+      transition: "box-shadow 0.2s",
+      height: 31,
+    }}
+    title="LimeSurvey öffnen"
+  >
+    <img
+      src="https://community.limesurvey.org/wp-content/uploads/2020/03/logo_limesurvey_darkblue_00.svg"
+      alt="LimeSurvey öffnen"
+      style={{
+        width: 80,
+        height: "auto",
+        display: "block",
+        background: "transparent",
+        border: "none",
+        boxShadow: "none",
+        padding: 0,
+      }}
+    />
+  </button>
+);
+
 function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isTeacherLoggedIn, setIsTeacherLoggedIn] = useState(false);
   const [isJoinedRoom, setIsJoinedRoom] = useState(false);
+
+  // Check if studentId is present
+  const [studentId, setStudentId] = useState(null);
+
+  useEffect(() => {
+    const id = localStorage.getItem("studentId");
+    setStudentId(id);
+  }, [localStorage.getItem("studentId")]);
 
   useEffect(() => {
     // Check if teacher is logged in (e.g., token in localStorage)
@@ -39,6 +81,14 @@ function Header() {
     localStorage.removeItem("studentName");
   };
 
+  // LimeSurvey Umfrage öffnen (Version 1)
+  const openLimeSurvey = () => {
+    if (!studentId) return;
+    const surveyUrl = `https://user-surveys.cs.fau.de/index.php?r=survey/index&sid=448573&lang=de
+&student_id=${studentId}`;
+    window.open(surveyUrl, "_blank");
+  };
+
   return (
     <Navbar
       bg="primary"
@@ -56,15 +106,18 @@ function Header() {
           Mensch oder Bot?
         </Navbar.Brand>
         <Nav className="ms-auto align-items-center">
-          {isJoinedRoom ? (
-            <Button
-              variant="outline-light"
-              size="sm"
-              onClick={leaveRoom}
-              className="ms-2"
-            >
-              Leave Room
-            </Button>
+          {isJoinedRoom && studentId ? (
+            <>
+              <LimeSurveyIcon onClick={openLimeSurvey} />
+              <Button
+                variant="outline-light"
+                size="sm"
+                onClick={leaveRoom}
+                className="ms-2"
+              >
+                Leave Room
+              </Button>
+            </>
           ) : isTeacherLoggedIn ? (
             <Button
               variant="outline-light"
