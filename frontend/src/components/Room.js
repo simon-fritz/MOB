@@ -5,7 +5,7 @@ import TeacherPanel from "./TeacherPanel";
 import API from "./api";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { BACKEND_HTTP } from "./backend_urls";
+import { BACKEND_HTTP } from "./api";
 
 function Room() {
   const [isStudent, setIsStudent] = useState(null);
