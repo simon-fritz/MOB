@@ -84,9 +84,7 @@ function StudentPanel({ room, user }) {
       }
       if (data.type === "make_guess") {
         setGuessResult(
-          data.is_correct
-            ? "Du hast richtig geraten."
-            : "Du hast falsch geraten."
+          data.is_correct ? "Du lagst richtig." : "Du lagst falsch."
         );
         setRoundStatus(RoundStatus.RESULT);
         // Guess zur History hinzufügen
@@ -467,7 +465,7 @@ function StudentPanel({ room, user }) {
                       cx="55"
                       cy="55"
                       r="50"
-                      stroke="#0d6efd"
+                      stroke="#6f42c1"
                       strokeWidth="10"
                       fill="none"
                       strokeDasharray={2 * Math.PI * 50}
@@ -491,7 +489,7 @@ function StudentPanel({ room, user }) {
                       justifyContent: "center",
                       fontSize: 28,
                       fontWeight: 700,
-                      color: "#0d6efd",
+                      color: "#6f42c1",
                     }}
                   >
                     {correctRateHuman}%
@@ -508,7 +506,7 @@ function StudentPanel({ room, user }) {
                   <div
                     style={{
                       fontWeight: 500,
-                      color: "#0d6efd",
+                      color: "#6f42c1",
                       marginTop: 2,
                     }}
                   >
@@ -537,7 +535,7 @@ function StudentPanel({ room, user }) {
                       cx="55"
                       cy="55"
                       r="50"
-                      stroke="#fd7e14"
+                      stroke="#17a2b8"
                       strokeWidth="10"
                       fill="none"
                       strokeDasharray={2 * Math.PI * 50}
@@ -561,7 +559,7 @@ function StudentPanel({ room, user }) {
                       justifyContent: "center",
                       fontSize: 28,
                       fontWeight: 700,
-                      color: "#fd7e14",
+                      color: "#17a2b8",
                     }}
                   >
                     {correctRateAI}%
@@ -578,7 +576,7 @@ function StudentPanel({ room, user }) {
                   <div
                     style={{
                       fontWeight: 500,
-                      color: "#fd7e14",
+                      color: "#17a2b8",
                       marginTop: 2,
                     }}
                   >
@@ -683,27 +681,31 @@ function StudentPanel({ room, user }) {
               <div className="d-flex flex-column align-items-center">
                 <button
                   onClick={() => handleGuess(false)}
-                  className="btn btn-outline-primary mb-2"
+                  className="btn mb-2"
                   style={{
                     fontWeight: 500,
                     fontSize: 18,
-                    width: 200,
+                    width: 400,
                     borderRadius: 8,
+                    color: "#6f42c1",
+                    border: "2px solid #6f42c1",
                   }}
                 >
-                  Das war ein Mensch.
+                  Mein Gegenüber war ein Mensch.
                 </button>
                 <button
                   onClick={() => handleGuess(true)}
-                  className="btn btn-outline-success"
+                  className="btn"
                   style={{
                     fontWeight: 500,
                     fontSize: 18,
-                    width: 200,
+                    width: 400,
                     borderRadius: 8,
+                    color: "#17a2b8",
+                    border: "2px solid #17a2b8",
                   }}
                 >
-                  Das war eine KI.
+                  Mein Gegenüber war eine KI.
                 </button>
               </div>
             </div>

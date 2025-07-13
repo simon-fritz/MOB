@@ -256,85 +256,6 @@ function TeacherPanel({ room }) {
                                   cy="90"
                                   r={radius}
                                   fill="none"
-                                  stroke="#0d6efd"
-                                  strokeWidth="16"
-                                  strokeDasharray={`${arc} ${
-                                    circumference - arc
-                                  }`}
-                                  strokeDashoffset={0}
-                                  transform="rotate(-90 90 90)"
-                                  style={{
-                                    transition: "stroke-dasharray 0.5s",
-                                  }}
-                                />
-                                <text
-                                  x="90"
-                                  y="90"
-                                  textAnchor="middle"
-                                  dominantBaseline="central"
-                                  fontSize="32"
-                                  fontWeight="bold"
-                                  fill="#0d6efd"
-                                >
-                                  {Math.round(percent * 100)}%
-                                </text>
-                                <text
-                                  x="90"
-                                  y="120"
-                                  textAnchor="middle"
-                                  fontSize="16"
-                                  fill="#333"
-                                >
-                                  {totalCorrect}/{total}
-                                </text>
-                              </>
-                            );
-                          })()}
-                        </svg>
-                        <div
-                          style={{
-                            fontWeight: 500,
-                            color: "#0d6efd",
-                            marginTop: 4,
-                          }}
-                        >
-                          Gesamt
-                        </div>
-                      </div>
-                      {/* Mensch */}
-                      <div
-                        style={{ width: 180, height: 180, textAlign: "center" }}
-                      >
-                        <svg width="180" height="180" viewBox="0 0 180 180">
-                          {(() => {
-                            const totalCorrect = guessStats.per_round.reduce(
-                              (sum, r) => sum + (r.correct_human || 0),
-                              0
-                            );
-                            const total = guessStats.per_round.reduce(
-                              (sum, r) => sum + (r.total_human || 0),
-                              0
-                            );
-                            const percent =
-                              total > 0 ? totalCorrect / total : 0;
-                            const radius = 80;
-                            const circumference = 2 * Math.PI * radius;
-                            const arc = circumference * percent;
-                            return (
-                              <>
-                                <circle
-                                  cx="90"
-                                  cy="90"
-                                  r={radius}
-                                  fill="#f1f5f9"
-                                  stroke="#e5e7eb"
-                                  strokeWidth="16"
-                                />
-                                <circle
-                                  cx="90"
-                                  cy="90"
-                                  r={radius}
-                                  fill="none"
                                   stroke="#198754"
                                   strokeWidth="16"
                                   strokeDasharray={`${arc} ${
@@ -377,6 +298,85 @@ function TeacherPanel({ room }) {
                             marginTop: 4,
                           }}
                         >
+                          Gesamt
+                        </div>
+                      </div>
+                      {/* Mensch */}
+                      <div
+                        style={{ width: 180, height: 180, textAlign: "center" }}
+                      >
+                        <svg width="180" height="180" viewBox="0 0 180 180">
+                          {(() => {
+                            const totalCorrect = guessStats.per_round.reduce(
+                              (sum, r) => sum + (r.correct_human || 0),
+                              0
+                            );
+                            const total = guessStats.per_round.reduce(
+                              (sum, r) => sum + (r.total_human || 0),
+                              0
+                            );
+                            const percent =
+                              total > 0 ? totalCorrect / total : 0;
+                            const radius = 80;
+                            const circumference = 2 * Math.PI * radius;
+                            const arc = circumference * percent;
+                            return (
+                              <>
+                                <circle
+                                  cx="90"
+                                  cy="90"
+                                  r={radius}
+                                  fill="#f1f5f9"
+                                  stroke="#e5e7eb"
+                                  strokeWidth="16"
+                                />
+                                <circle
+                                  cx="90"
+                                  cy="90"
+                                  r={radius}
+                                  fill="none"
+                                  stroke="#6f42c1"
+                                  strokeWidth="16"
+                                  strokeDasharray={`${arc} ${
+                                    circumference - arc
+                                  }`}
+                                  strokeDashoffset={0}
+                                  transform="rotate(-90 90 90)"
+                                  style={{
+                                    transition: "stroke-dasharray 0.5s",
+                                  }}
+                                />
+                                <text
+                                  x="90"
+                                  y="90"
+                                  textAnchor="middle"
+                                  dominantBaseline="central"
+                                  fontSize="32"
+                                  fontWeight="bold"
+                                  fill="#6f42c1"
+                                >
+                                  {Math.round(percent * 100)}%
+                                </text>
+                                <text
+                                  x="90"
+                                  y="120"
+                                  textAnchor="middle"
+                                  fontSize="16"
+                                  fill="#333"
+                                >
+                                  {totalCorrect}/{total}
+                                </text>
+                              </>
+                            );
+                          })()}
+                        </svg>
+                        <div
+                          style={{
+                            fontWeight: 500,
+                            color: "#6f42c1",
+                            marginTop: 4,
+                          }}
+                        >
                           Mensch
                         </div>
                       </div>
@@ -414,7 +414,7 @@ function TeacherPanel({ room }) {
                                   cy="90"
                                   r={radius}
                                   fill="none"
-                                  stroke="#fd7e14"
+                                  stroke="#17a2b8"
                                   strokeWidth="16"
                                   strokeDasharray={`${arc} ${
                                     circumference - arc
@@ -432,7 +432,7 @@ function TeacherPanel({ room }) {
                                   dominantBaseline="central"
                                   fontSize="32"
                                   fontWeight="bold"
-                                  fill="#fd7e14"
+                                  fill="#17a2b8"
                                 >
                                   {Math.round(percent * 100)}%
                                 </text>
@@ -452,7 +452,7 @@ function TeacherPanel({ room }) {
                         <div
                           style={{
                             fontWeight: 500,
-                            color: "#fd7e14",
+                            color: "#17a2b8",
                             marginTop: 4,
                           }}
                         >
@@ -479,10 +479,10 @@ function TeacherPanel({ room }) {
                       .map((r) => (
                         <tr key={r.round}>
                           <td>{r.round}</td>
-                          <td style={{ color: "#198754", fontWeight: 600 }}>
+                          <td style={{ color: "#6f42c1", fontWeight: 600 }}>
                             {r.correct_human + "/" + r.total_human ?? 0}
                           </td>
-                          <td style={{ color: "#fd7e14", fontWeight: 600 }}>
+                          <td style={{ color: "#17a2b8", fontWeight: 600 }}>
                             {r.correct_ai + "/" + r.total_ai ?? 0}
                           </td>
                         </tr>
