@@ -52,7 +52,7 @@ Deine Antworten sollen authentisch rüberkommen, als würde ein echter Jugendlic
     messages = [{"role": "system", "content": system_prompt}] + messages
     
     completion = await sync_to_async(client.chat.completions.create, thread_sensitive=False)(
-        model="gpt-4o-mini",
+        model="o4-mini",
         messages=messages
     )
     
@@ -102,7 +102,7 @@ Generiere eine lockere Bergüßung wie: heyy, wie gehts?.
         {"role": "system", "content": system_prompt}
     ]
     completion = await sync_to_async(client.chat.completions.create, thread_sensitive=False)(
-        model="gpt-4o-mini",
+        model="o4-mini",
         messages=messages
     )
     response = completion.choices[0].message.content
