@@ -300,7 +300,7 @@ function StudentPanel({ room, user }) {
           {roundStatus === RoundStatus.STARTED && (
             <div className="shadow p-4 mt-4" style={{ borderRadius: 20 }}>
               <div
-                className="text-center bg-info text-white"
+                className="text-center bg-primary text-white"
                 style={{
                   borderRadius: 15,
                   fontSize: 22,
