@@ -105,7 +105,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
         if command == 'match_users':
             await self.match_users()
             #start the round timer
-            asyncio.create_task(self.start_timer(60))
+            asyncio.create_task(self.start_timer(120))
 
         if command == 'send_private_message':
             await self.send_private_message(data)
