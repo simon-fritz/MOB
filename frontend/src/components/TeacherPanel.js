@@ -138,13 +138,15 @@ function TeacherPanel({ room }) {
             </div>
           </div>
           {roundPaused && (
-            <button
-              onClick={handleMatchUsers}
-              className="btn btn-success w-100 mb-2"
-              style={{ fontWeight: 500, fontSize: 18 }}
-            >
-              Starte nächste Runde
-            </button>
+            <div className="d-flex justify-content-center">
+              <button
+                onClick={handleMatchUsers}
+                className="btn btn-success mb-2"
+                style={{ fontWeight: 500, fontSize: 18 }}
+              >
+                Starte nächste Runde
+              </button>
+            </div>
           )}
           <OverlayTrigger
             placement="bottom"
@@ -207,17 +209,18 @@ function TeacherPanel({ room }) {
               }}
             >
               <div
-                className="bg-info text-white text-center"
+                className="bg-primary text-white text-center"
                 style={{
                   borderRadius: 15,
                   fontSize: 20,
                   fontWeight: 500,
                   padding: 10,
+                  width: "100%",
                 }}
               >
                 So haben die Schüler abgestimmt:
               </div>
-              <div className="mb-3">
+              <div className="mb-3 mt-3">
                 <strong>Alle Runden:</strong>
                 <div className="d-flex gap-4 mt-2">
                   {guessStats.per_round.length > 0 && (
