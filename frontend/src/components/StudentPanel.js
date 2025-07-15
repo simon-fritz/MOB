@@ -442,6 +442,15 @@ function StudentPanel({ room, user }) {
                   >
                     {correctGuesses} von {totalGuesses} richtig
                   </div>
+                  <div
+                    style={{
+                      fontWeight: 500,
+                      color: "#198754",
+                      marginTop: 2,
+                    }}
+                  >
+                    Gesamt erkannt
+                  </div>
                 </div>
                 {/* Mensch */}
                 <div
@@ -510,7 +519,7 @@ function StudentPanel({ room, user }) {
                       marginTop: 2,
                     }}
                   >
-                    Mensch
+                    Menschen erkannt
                   </div>
                 </div>
                 {/* KI */}
@@ -580,7 +589,7 @@ function StudentPanel({ room, user }) {
                       marginTop: 2,
                     }}
                   >
-                    KI
+                    KI erkannt
                   </div>
                 </div>
               </div>
@@ -589,7 +598,10 @@ function StudentPanel({ room, user }) {
 
           {/* Neue Guess-Historie Tabelle */}
           {guessHistory.length > 0 && roundStatus !== RoundStatus.STARTED && (
-            <div className="shadow p-3 mt-4" style={{ borderRadius: 20 }}>
+            <div
+              className="shadow p-3"
+              style={{ borderRadius: 20, marginTop: 50 }}
+            >
               <div
                 className="bg-secondary text-white text-center"
                 style={{

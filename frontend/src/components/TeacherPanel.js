@@ -301,7 +301,7 @@ function TeacherPanel({ room }) {
                             marginTop: 4,
                           }}
                         >
-                          Gesamt
+                          Gesamt erkannt
                         </div>
                       </div>
                       {/* Mensch */}
@@ -380,7 +380,7 @@ function TeacherPanel({ room }) {
                             marginTop: 4,
                           }}
                         >
-                          Mensch
+                          Menschen erkannt
                         </div>
                       </div>
                       {/* KI */}
@@ -459,7 +459,7 @@ function TeacherPanel({ room }) {
                             marginTop: 4,
                           }}
                         >
-                          KI
+                          KI erkannt
                         </div>
                       </div>
                     </div>
