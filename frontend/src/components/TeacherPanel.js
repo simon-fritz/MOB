@@ -459,7 +459,7 @@ function TeacherPanel({ room }) {
                             marginTop: 4,
                           }}
                         >
-                          KI erkannt
+                          KIs erkannt
                         </div>
                       </div>
                     </div>
@@ -473,7 +473,7 @@ function TeacherPanel({ room }) {
                     <tr>
                       <th>Runde</th>
                       <th>Menschen erkannt</th>
-                      <th>KI erkannt</th>
+                      <th>KIs erkannt</th>
                     </tr>
                   </thead>
                   <tbody>

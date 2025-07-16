@@ -589,7 +589,7 @@ function StudentPanel({ room, user }) {
                       marginTop: 2,
                     }}
                   >
-                    KI erkannt
+                    KIs erkannt
                   </div>
                 </div>
               </div>
@@ -619,7 +619,7 @@ function StudentPanel({ room, user }) {
                   <thead>
                     <tr>
                       <th>Runde</th>
-                      <th>Dein Tipp</th>
+                      <th>Du hast abgestimmt</th>
                       <th>Es war</th>
                     </tr>
                   </thead>
