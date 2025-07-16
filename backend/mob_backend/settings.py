@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "channels",
     "corsheaders",
     "rooms",
+    "import_export",
 ]
 
 MIDDLEWARE = [
