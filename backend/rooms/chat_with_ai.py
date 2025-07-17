@@ -60,8 +60,8 @@ Deine Antworten sollen authentisch rüberkommen, als würde ein echter Jugendlic
     response = completion.choices[0].message.content
     
     # Add a longer, more variable delay to simulate human-like response time
-    min_delay = 2.0
-    max_delay = 4.0
+    min_delay = 1.0
+    max_delay = 1.0
     length_factor = len(response) * 0.2
     delay = random.uniform(min_delay, max_delay) + length_factor
     await asyncio.sleep(delay)
@@ -109,8 +109,8 @@ Generiere eine kurze lockere Bergüßung wie: heyy wie gehts?, was geht? oder ei
     )
     response = completion.choices[0].message.content
     # Simuliere menschliche Antwortzeit
-    min_delay = 2.0
-    max_delay = 4.0
+    min_delay = 1.0
+    max_delay = 2.0
     length_factor = len(response) * 0.2
     delay = random.uniform(min_delay, max_delay) + length_factor
     await asyncio.sleep(delay)
