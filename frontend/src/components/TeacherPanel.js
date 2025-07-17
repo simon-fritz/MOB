@@ -13,6 +13,7 @@ import RoomMembers from "./RoomMembers";
 import Timer from "./Timer";
 import API from "./api";
 
+
 function TeacherPanel({ room }) {
   const [members, setMembers] = useState([]);
   const [socketStatus, setSocketStatus] = useState("Disconnected");
@@ -20,6 +21,11 @@ function TeacherPanel({ room }) {
   const [timerString, setTimerString] = useState("");
   const [showSocketAlert, setShowSocketAlert] = useState(false);
   const [guessStats, setGuessStats] = useState(null);
+  const [currentRound, setCurrentRound] = useState(room.current_round);
+
+  useEffect(() => {
+    setCurrentRound(room.current_round);
+  }, [room.current_round]);
 
   let roundPaused = timerString === "" || parseInt(timerString, 10) === 0;
 
@@ -125,7 +131,7 @@ function TeacherPanel({ room }) {
                 Runde:
               </strong>
               <span className="badge bg-secondary" style={{ fontSize: 22 }}>
-                {room.current_round}
+                {currentRound}
               </span>
             </div>
           </div>
