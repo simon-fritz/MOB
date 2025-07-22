@@ -7,9 +7,6 @@ function Footer() {
       className="bg-light text-center text-muted py-3 mt-auto shadow-sm"
       style={{
         fontSize: 15,
-        position: "fixed",
-        left: 0,
-        bottom: 0,
         width: "100%",
         zIndex: 100,
       }}
