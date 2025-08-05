@@ -1,7 +1,5 @@
 # MOB - A Web Application to Study Students Ability to detect Conversational AI
 
-MOB is a web-based interactive learning platform that enables teachers to create virtual rooms where students can participate in real-time educational activities, chat, and engage in collaborative learning experiences.
-
 ## ✨ Features
 
 - **Room Creation**: Teachers can create virtual rooms and share unique 4-digit codes for students to join.
