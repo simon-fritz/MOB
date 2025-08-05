@@ -5,7 +5,6 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async
 
 from accounts.models import CustomUser
-from .chat_with_ai import chat_with_ai
 from .models import Room, RoomMembership, Match, Guess, ChatMessageLog
 from django.contrib.auth.models import AnonymousUser
 import random
@@ -123,9 +122,11 @@ class RoomConsumer(AsyncWebsocketConsumer):
         
     async def private_message(self, event):
         message = event.get("message", "")
+        in_round = event.get("room_round", "")
         await self.send(text_data=json.dumps({
             "type": "private_message",
-            "message": message
+            "message": message,
+            "room_round": in_round
         }))
 
     # Diese Methode empfängt den Countdown-Event und sendet den aktuellen Sekundenwert an den Client
@@ -205,9 +206,12 @@ class RoomConsumer(AsyncWebsocketConsumer):
         # Bestimme die Anzahl der Schüler, die in Mensch-gegen-Mensch-Matches kommen sollen.
         if n < 2:
             human_human_count = 0
+        elif n == 2:
+            # Randomly decide: either 2 humans (1 pair) or 0 (both vs AI)
+            human_human_count = 2 if random.choice([True, False]) else 0
         elif n == 3:
-          human_human_count = 2  
-        else:
+            human_human_count = 2 
+        else:             
             desired = n // 2
             # Für eine valide Paarung muss die Anzahl gerade sein.
             if desired % 2 != 0:
@@ -317,6 +321,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
                         {
                             'type': 'private_message',
                             'message': message,
+                            "room_round": room_round
                         }
                     )
         except Exception as e:
@@ -343,6 +348,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
             {
                 'type': 'private_message',
                 'message': response,
+                "room_round": room_round
             }
         )
 
@@ -364,6 +370,7 @@ class RoomConsumer(AsyncWebsocketConsumer):
             {
                 'type': 'private_message',
                 'message': response,
+                "room_round": room_round
             }
         )
 

@@ -85,6 +85,7 @@ function TeacherPanel({ room }) {
   const handleMatchUsers = () => {
     if (socket) {
       socket.send(JSON.stringify({ command: "match_users" }));
+      room.current_round += 1;
     }
   };
 
