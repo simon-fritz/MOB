@@ -372,6 +372,78 @@ function StudentPanel({ room, user }) {
             </div>
           )}
 
+          {roundStatus === RoundStatus.GUESS_PHASE && (
+            <div className="shadow p-4 mt-4 mb-4" style={{ borderRadius: 20 }}>
+              <div
+                className="text-center bg-warning text-dark"
+                style={{
+                  borderRadius: 15,
+                  fontSize: 22,
+                  fontWeight: 500,
+                  marginBottom: 32,
+                  padding: 8,
+                }}
+              >
+                Mit was hast du gesprochen?
+              </div>
+              <div className="d-flex flex-column align-items-center">
+                <button
+                  onClick={() => handleGuess(false)}
+                  className="btn mb-2"
+                  style={{
+                    fontWeight: 500,
+                    fontSize: 18,
+                    width: 400,
+                    borderRadius: 8,
+                    color: "#6f42c1",
+                    border: "2px solid #6f42c1",
+                  }}
+                >
+                  Mein Gegenüber war ein Mensch.
+                </button>
+                <button
+                  onClick={() => handleGuess(true)}
+                  className="btn"
+                  style={{
+                    fontWeight: 500,
+                    fontSize: 18,
+                    width: 400,
+                    borderRadius: 8,
+                    color: "#17a2b8",
+                    border: "2px solid #17a2b8",
+                  }}
+                >
+                  Mein Gegenüber war eine KI.
+                </button>
+              </div>
+            </div>
+          )}
+
+          {roundStatus === RoundStatus.RESULT && (
+            <div className="shadow p-4 mt-4 mb-4" style={{ borderRadius: 20 }}>
+              <div
+                className={
+                  "text-center text-white" +
+                  (guessResult.includes("falsch")
+                    ? " bg-danger"
+                    : " bg-success")
+                }
+                style={{
+                  borderRadius: 15,
+                  fontSize: 22,
+                  fontWeight: 500,
+                  marginBottom: 32,
+                  padding: 8,
+                }}
+              >
+                Ergebnis
+              </div>
+              <div className="d-flex flex-column align-items-center">
+                <p style={{ fontSize: 24, fontWeight: 600 }}>{guessResult}</p>
+              </div>
+            </div>
+          )}
+
           {/* Gesamtübersicht: Richtig-Rate als Kreis */}
           {totalGuesses > 0 && roundStatus !== RoundStatus.STARTED && (
             <div
@@ -672,78 +744,6 @@ function StudentPanel({ room, user }) {
                     })}
                   </tbody>
                 </table>
-              </div>
-            </div>
-          )}
-
-          {roundStatus === RoundStatus.GUESS_PHASE && (
-            <div className="shadow p-4 mt-4" style={{ borderRadius: 20 }}>
-              <div
-                className="text-center bg-warning text-dark"
-                style={{
-                  borderRadius: 15,
-                  fontSize: 22,
-                  fontWeight: 500,
-                  marginBottom: 16,
-                  padding: 8,
-                }}
-              >
-                Mit was hast du gesprochen?
-              </div>
-              <div className="d-flex flex-column align-items-center">
-                <button
-                  onClick={() => handleGuess(false)}
-                  className="btn mb-2"
-                  style={{
-                    fontWeight: 500,
-                    fontSize: 18,
-                    width: 400,
-                    borderRadius: 8,
-                    color: "#6f42c1",
-                    border: "2px solid #6f42c1",
-                  }}
-                >
-                  Mein Gegenüber war ein Mensch.
-                </button>
-                <button
-                  onClick={() => handleGuess(true)}
-                  className="btn"
-                  style={{
-                    fontWeight: 500,
-                    fontSize: 18,
-                    width: 400,
-                    borderRadius: 8,
-                    color: "#17a2b8",
-                    border: "2px solid #17a2b8",
-                  }}
-                >
-                  Mein Gegenüber war eine KI.
-                </button>
-              </div>
-            </div>
-          )}
-
-          {roundStatus === RoundStatus.RESULT && (
-            <div className="shadow p-4 mt-4" style={{ borderRadius: 20 }}>
-              <div
-                className={
-                  "text-center text-white" +
-                  (guessResult.includes("falsch")
-                    ? " bg-danger"
-                    : " bg-success")
-                }
-                style={{
-                  borderRadius: 15,
-                  fontSize: 22,
-                  fontWeight: 500,
-                  marginBottom: 16,
-                  padding: 8,
-                }}
-              >
-                Ergebnis
-              </div>
-              <div className="d-flex flex-column align-items-center">
-                <p style={{ fontSize: 24, fontWeight: 600 }}>{guessResult}</p>
               </div>
             </div>
           )}
