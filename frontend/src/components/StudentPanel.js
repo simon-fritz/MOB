@@ -57,7 +57,6 @@ function StudentPanel({ room, user }) {
 
     ws.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log(data);
       if (data.type === "member_list") {
         setMembers(data.members);
       }
@@ -66,6 +65,10 @@ function StudentPanel({ room, user }) {
         setRoundStatus(RoundStatus.STARTED);
       }
       if (data.type === "private_message") {
+        if (data.room_round !== room.current_round) {
+          // Ignore messages from other rounds
+          return;
+        }
         setMessages((prevMessages) => [
           ...prevMessages,
           { username: "?", message: data.message },
