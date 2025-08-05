@@ -62,7 +62,7 @@ Deine Antworten sollen authentisch rüberkommen, als würde ein echter Jugendlic
     # Add a longer, more variable delay to simulate human-like response time
     min_delay = 2.0
     max_delay = 4.0
-    length_factor = len(response) * 0.2
+    length_factor = len(response) * 0.18
     delay = random.uniform(min_delay, max_delay) + length_factor
     await asyncio.sleep(delay)
     return response
