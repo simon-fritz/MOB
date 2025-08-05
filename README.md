@@ -8,6 +8,8 @@
 - **Decision Making**: After each chat, students must decide whether they interacted with a real student or an AI.
 - **Voting Feedback**: Both students and teachers receive comprehensive feedback on voting results after each chat round.
 
+---
+
 - **Frontend**: React.js with Bootstrap for responsive UI
 - **Backend**: Django with Django REST Framework
 - **Real-time Communication**: Django Channels with WebSocket support + Redis
