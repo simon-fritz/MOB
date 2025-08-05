@@ -1,5 +1,7 @@
 # MOB - A Web Application to Study Students Ability to detect Conversational AI
 
+<img src="icon.png" alt="App Icon" width="300" height="300" />
+
 ## ✨ Features
 
 - **Room Creation**: Teachers can create virtual rooms and share unique 4-digit codes for students to join.
