@@ -205,9 +205,12 @@ class RoomConsumer(AsyncWebsocketConsumer):
         # Bestimme die Anzahl der Schüler, die in Mensch-gegen-Mensch-Matches kommen sollen.
         if n < 2:
             human_human_count = 0
+        elif n == 2:
+            # Randomly decide: either 2 humans (1 pair) or 0 (both vs AI)
+            human_human_count = 2 if random.choice([True, False]) else 0
         elif n == 3:
-          human_human_count = 2  
-        else:
+            human_human_count = 2 
+        else:             
             desired = n // 2
             # Für eine valide Paarung muss die Anzahl gerade sein.
             if desired % 2 != 0:
