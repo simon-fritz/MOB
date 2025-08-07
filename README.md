@@ -2,6 +2,8 @@
 
 <img src="icon.png" alt="App Icon" width="300" height="300" />
 
+MOB stands for the German phrase "Mensch oder Bot" (Human or Bot). The application challenges students to detect whether they're chatting with a real person or an AI – testing their intuition and critical thinking in the age of conversational AI.
+
 ## ✨ Features
 
 - **Room Creation**: Teachers can create virtual rooms and share unique 4-digit codes for students to join.
