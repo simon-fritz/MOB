@@ -357,11 +357,13 @@ class RoomConsumer(AsyncWebsocketConsumer):
         Lässt die KI das Gespräch initiieren und sendet die erste Nachricht mit Verzögerung an den Nutzer.
         """
         response = await generate_ai_greeting()
+        # Hole das User-Objekt anhand der ID
+        user_obj = await sync_to_async(CustomUser.objects.get)(id=user)
         # Speichere die AI-Nachricht im Log
         await sync_to_async(ChatMessageLog.objects.create)(
             room=str(self.room_id),
             sender=None,  # AI hat keinen Usernamen
-            receiver=user if isinstance(user, str) else str(user),
+            receiver=user_obj.username,
             message=response,
             round=room_round
         )
