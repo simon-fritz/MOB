@@ -2,7 +2,7 @@
 
 <img src="icon.png" alt="App Icon" width="300" height="300" />
 
-MOB stands for the German phrase "Mensch oder Bot" (Human or Bot). The application challenges students to detect whether they're chatting with a real person or an AI – testing their intuition and critical thinking in the age of conversational AI.
+MOB stands for the German phrase "Mensch oder Bot" (Human or Bot). The application challenges students to detect whether they are chatting with a real person or an AI – testing their intuition and critical thinking in the age of conversational AI.
 
 **Note**: The application interface and parts of the code documentation are in German, as this project was developed for German-speaking educational environments.
 
