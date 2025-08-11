@@ -4,6 +4,8 @@
 
 MOB stands for the German phrase "Mensch oder Bot" (Human or Bot). The application challenges students to detect whether they're chatting with a real person or an AI – testing their intuition and critical thinking in the age of conversational AI.
 
+**Note**: The application interface and parts of the code documentation are in German, as this project was developed for German-speaking educational environments.
+
 ## ✨ Features
 
 - **Room Creation**: Teachers can create virtual rooms and share unique 4-digit codes for students to join.
@@ -48,6 +50,12 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
+
+# Setup environment variables
+cp .env_template .env
+# Edit .env file and add your configuration:
+# - TEACHER_SECRET: A secret key for teacher authentication
+# - OPENAI_API_KEY: Your OpenAI API key for the LLM
 
 # Run database migrations
 python manage.py migrate
